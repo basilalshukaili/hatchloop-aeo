@@ -6,14 +6,22 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install from lockfile — includes all deps (devDeps needed for prisma generate)
-RUN npm ci --legacy-peer-deps
+# Install from lockfile — force devDeps (@remix-run/dev) even if NODE_ENV=production,
+# because we now compile the Remix build inside the image (see RUN npm run build below).
+RUN npm ci --include=dev --legacy-peer-deps
 
-# Copy pre-built source (build/ committed — skips remix build on Render)
+# Copy source
 COPY . .
 
 # Generate Prisma client for the target platform (Alpine linux-musl)
 RUN npx prisma generate
+
+# Compile the Remix build FRESH from the current source on every image build.
+# NEVER serve a stale committed build/ artifact — that trap caused the GDPR
+# webhook routes to 404 in production (2026-08-13): route source files were
+# added but build/ was never recompiled. Building here makes source the single
+# source of truth so new routes/pages always ship.
+RUN npm run build
 
 # Render Docker web services default to PORT=10000
 EXPOSE 10000
