@@ -11416,7 +11416,7 @@ import { useLoaderData as useLoaderData2, useNavigation, useFetcher } from "@rem
 
 // app/engine/aeo.server.js
 import { createRequire } from "module";
-var require2 = createRequire(import.meta.url), ENGINE_PATH = "../../../../build/aeo_engine.js", ENGINE_AUTHED_PATH = "../../../../build/aeo_engine_authed.js", _engine = null, _engineAuthed = null;
+var require2 = createRequire(import.meta.url), ENGINE_PATH = "../../engine-lib/aeo_engine.js", ENGINE_AUTHED_PATH = "../../engine-lib/aeo_engine_authed.js", _engine = null, _engineAuthed = null;
 function getEngine() {
   return _engine || (_engine = require2(ENGINE_PATH)), _engine;
 }

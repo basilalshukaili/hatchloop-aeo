@@ -15,10 +15,13 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-// Path from this file to the engine roots.
-// Adjust if the repo layout changes — these are the only two coupling points.
-const ENGINE_PATH = '../../../../build/aeo_engine.js';
-const ENGINE_AUTHED_PATH = '../../../../build/aeo_engine_authed.js';
+// Engine roots, VENDORED into this repo at <root>/engine-lib/ so they deploy with
+// the app. Resolved via createRequire(import.meta.url); at runtime this module is
+// the compiled build/server/index.js, so '../../engine-lib/' == <repo-root>/engine-lib/.
+// (The old '../../../../build/…' path reached OUT of this repo into the parent
+// workspace and only worked locally — it 404'd the engine on Render.)
+const ENGINE_PATH = '../../engine-lib/aeo_engine.js';
+const ENGINE_AUTHED_PATH = '../../engine-lib/aeo_engine_authed.js';
 
 let _engine = null;
 let _engineAuthed = null;
