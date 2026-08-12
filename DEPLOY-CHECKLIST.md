@@ -144,12 +144,16 @@ then calls the real Admin GraphQL API.
 | Shopify Billing API wired — Starter $19/mo + Pro $79/mo, 7-day trial | Done 2026-08-12 |
 | app.descriptions.jsx — AI product description generation | Done |
 | app.billing.jsx action — real billing.request() call | Done 2026-08-12 |
-| render.yaml — Render deployment config (starter plan, /data SQLite disk 1GB) | Done 2026-08-12 |
+| render.yaml — Render deployment config | Done 2026-08-12 |
 | Privacy policy page | Done (hatchloop.dev/privacy/ — HTTP 200) |
-| shopify.app.toml redirect_urls | Placeholder — needs real URL |
-| apps/aeo-app/.env — AUTH_MODE=shopify | Pending (still mock by default) |
-| Cloudflare tunnel / production host URL | Pending |
-| Partner Dashboard URLs updated | Pending (HITL — founder one-time 5-min task) |
+| GitHub repo created (public) | Done 2026-08-12 — github.com/basilalshukaili/hatchloop-aeo |
+| Render service created (free plan) | Done 2026-08-12 — srv-d9ubp1u5djic739ken00 |
+| All env vars set on Render | Done 2026-08-12 — NODE_ENV, AUTH_MODE=shopify, SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_APP_URL, DEEPSEEK_API_KEY, DATABASE_URL |
+| AI descriptions switched to DeepSeek | Done 2026-08-12 — DEEPSEEK_API_KEY, no Anthropic SDK needed |
+| shopify.app.toml redirect_urls | Done 2026-08-12 — hatchloop-aeo.onrender.com |
+| Production deployment build | IN PROGRESS — dep-d9ubqpu5djic739kj6t0, build_in_progress |
+| Partner Dashboard URLs updated | Pending — CEO will do via Shopify CLI (no founder action) |
+| OAuth test install on dev store | Pending |
 | DB migrated | Pending (auto-runs on Render start via `npx prisma migrate deploy`) |
 | Production deployment | Pending (HITL gate — founder approval before deploy) |
 | App listing content | Pending |
