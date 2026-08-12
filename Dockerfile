@@ -6,16 +6,16 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install from lockfile — fast, deterministic, includes devDeps
+# Install from lockfile — fast, deterministic, includes devDeps for prisma generate
 RUN npm ci --legacy-peer-deps
 
-# Copy source
+# Copy pre-built source (build/ committed — skips remix build on Render)
 COPY . .
 
-# Generate Prisma client and build Remix app
-RUN npx prisma generate && npm run build
+# Generate Prisma client for the target platform
+RUN npx prisma generate
 
-# Prune devDependencies for smaller runtime image
+# Prune devDependencies for smaller runtime image (prisma CLI is in deps, stays)
 RUN npm prune --production
 
 EXPOSE 3000
