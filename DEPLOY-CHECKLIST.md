@@ -76,21 +76,29 @@ browser-based Partner Dashboard or Shopify's human review queue.
 
 ### Before public listing / App Store submission
 
-5. **App listing content** (Partner Dashboard → App listing):
+5. **Set GDPR webhook URLs in Partner Dashboard** (required for App Store Review)
+   - Partner Dashboard → Apps → Hatchloop AEO → Configuration → Privacy/GDPR
+   - Customer data request URL: `https://hatchloop-aeo.onrender.com/webhooks/customers-data-request`
+   - Customer data erasure URL: `https://hatchloop-aeo.onrender.com/webhooks/customers-redact`
+   - Shop data erasure URL: `https://hatchloop-aeo.onrender.com/webhooks/shop-redact`
+   - Handler routes exist and return 200. GDPR topics cannot be set via `shopify app deploy` —
+     must be entered manually in the Dashboard. App Review will reject without these.
+
+6. **App listing content** (Partner Dashboard → App listing):
    - App icon (1200×1200 px)
    - Screenshots (1600×1200 px, min 3 — listing-assets/ has HTML mockups to screenshot)
    - Short description (≤ 100 chars) and long description
    - Privacy policy URL (required — can be a simple /privacy page on your domain)
    - Support email
 
-6. **Shopify App Review** (Partners Dashboard → Submit for review):
+7. **Shopify App Review** (Partners Dashboard → Submit for review):
    - Review SLA: typically 5–10 business days for a new listing.
    - Shopify will test install/uninstall, verify the OAuth scopes match what the app
      actually uses, and check the mandatory app/uninstalled webhook handler (wired).
    - Common rejection reasons: scopes broader than needed, missing uninstall handler,
-     broken OAuth, no privacy policy. All three are handled in this scaffold.
+     broken OAuth, no privacy policy, missing GDPR URLs. All handled in this scaffold.
 
-7. **Production deployment** (before submitting for review):
+8. **Production deployment** (before submitting for review):
    - Push to a stable host (Fly.io, Railway, Render — all support Node.js + Prisma).
    - Set `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `SHOPIFY_APP_URL`, `DATABASE_URL`,
      `AUTH_MODE=shopify` as environment variables on the host.
@@ -154,7 +162,10 @@ then calls the real Admin GraphQL API.
 | Root crash fix: @shopify/polaris ESM JSON imports | Done 2026-08-12 — serverDependenciesToBundle bundles polaris |
 | Production deployment LIVE | **Done 2026-08-12** — https://hatchloop-aeo.onrender.com HTTP 200 |
 | DB migrated | Done (auto-ran via `npx prisma migrate deploy` on first start) |
-| Partner Dashboard URLs updated | **HITL REQUIRED** — founder must set App URL + redirect URLs in Partner Dashboard web UI (3 fields). Cannot be done via Partner API token. |
-| OAuth test install on dev store | Pending — after founder sets Dashboard URLs |
+| Partner Dashboard URLs updated | Done 2026-08-13 — `shopify app deploy` (hatchloop-aeo-2) registered URLs |
+| GDPR webhook routes created | Done 2026-08-13 — /webhooks/customers-data-request, /webhooks/customers-redact, /webhooks/shop-redact |
+| GDPR URLs set in Partner Dashboard | **HITL REQUIRED** — founder must enter 3 URLs in Partner Dashboard → Configuration → Privacy/GDPR |
+| OAuth test install on dev store | **HITL REQUIRED** — founder installs on dev store to test OAuth flow |
 | App listing content | Pending |
 | App Review submission | Pending (allow 5–10 business days) |
+| App version | hatchloop-aeo-3 (2026-08-13) |
