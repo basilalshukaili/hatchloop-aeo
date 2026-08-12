@@ -2,12 +2,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
+# Copy lockfile + package.json so npm ci can use the exact resolved versions
+COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install all deps (including devDeps needed for remix build)
-RUN npm install --legacy-peer-deps
+# Install from lockfile — fast, deterministic, includes devDeps
+RUN npm ci --legacy-peer-deps
 
 # Copy source
 COPY . .
