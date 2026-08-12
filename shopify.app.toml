@@ -27,8 +27,8 @@ scopes = "read_products,write_products,read_content,read_themes,write_themes,rea
 # Example tunnel: https://xxxx.trycloudflare.com
 # These must also be registered in the Partner Dashboard under App Setup > URLs.
 redirect_urls = [
-  "https://REPLACE_WITH_DEPLOY_URL/auth/callback",
-  "https://REPLACE_WITH_DEPLOY_URL/auth/shopify/callback",
+  "https://hatchloop-aeo.onrender.com/auth/callback",
+  "https://hatchloop-aeo.onrender.com/auth/shopify/callback",
 ]
 
 [webhooks]
