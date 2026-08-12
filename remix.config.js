@@ -6,6 +6,9 @@ export default {
   publicPath: '/build/',
   serverBuildPath: 'build/server/index.js',
   serverModuleFormat: 'esm',
+  // Bundle polaris so esbuild inlines its JSON locale files rather than
+  // leaving them as external ESM imports (which Node 20+ rejects without type:json).
+  serverDependenciesToBundle: [/^@shopify\/polaris/],
   future: {
     v3_fetcherPersist: true,
     v3_relativeSplatPath: true,
