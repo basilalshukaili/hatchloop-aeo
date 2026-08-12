@@ -174,9 +174,37 @@ export async function loader({ request }) {
   });
 }
 
+// ── Bill-safety: per-shop generation rate limit (in-memory sliding window) ─────
+// A safety valve so no shop (or abuser) can spam Generate and run up the DeepSeek
+// bill. In-memory resets on restart, which is fine for a per-session cap; a
+// DB-backed daily quota lands with the Postgres migration.
+const _genLog = new Map(); // shop -> number[] (timestamps in ms)
+const GEN_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const GEN_MAX = 40;                     // max generations per shop per window
+function _genRateLimit(shop) {
+  const now = Date.now();
+  const recent = (_genLog.get(shop) || []).filter((t) => now - t < GEN_WINDOW_MS);
+  if (recent.length >= GEN_MAX) {
+    return 'Too many generations in a short time. Please wait a few minutes and try again.';
+  }
+  recent.push(now);
+  _genLog.set(shop, recent);
+  return null;
+}
+
 // ── Action ────────────────────────────────────────────────────────────────────
 export async function action({ request }) {
-  const shop = getShopFromRequest(request);
+  // Authenticate FIRST in real mode: only a valid Shopify session can trigger AI
+  // generation (closes an unauthenticated-abuse / bill hole) and gives the
+  // canonical shop for rate-limiting. Reuse `admin` for the write below.
+  let shop, admin = null;
+  if (IS_MOCK) {
+    shop = getShopFromRequest(request);
+  } else {
+    const auth = await authenticateAdmin(request);
+    admin = auth.admin;
+    shop = auth.session.shop;
+  }
   const tier = await getTier(shop);
   const formData = await request.formData();
   const intent = formData.get('intent');
@@ -188,6 +216,10 @@ export async function action({ request }) {
 
   // ── Generate: call AI and return the text (no write yet) ──
   if (intent === 'generate') {
+    const limitMsg = _genRateLimit(shop);
+    if (limitMsg) {
+      return json({ ok: false, intent: 'generate', productId, error: limitMsg }, { status: 429 });
+    }
     try {
       const description = await generateDescription({
         title: productTitle,
@@ -214,7 +246,7 @@ export async function action({ request }) {
     }
 
     try {
-      const { admin } = await authenticateAdmin(request);
+      // reuse the admin authenticated at the top of the action
       const res = await admin.graphql(PRODUCT_UPDATE_MUTATION, {
         variables: {
           input: {
