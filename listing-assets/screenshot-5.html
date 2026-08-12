@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1600">
+<title>Hatchloop AEO — Screenshot 5: Citation Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --shopify-green: #008060;
+    --bg-page: #f1f2f4;
+    --bg-card: #ffffff;
+    --text-primary: #202223;
+    --text-secondary: #6d7175;
+    --text-subdued: #8c9196;
+    --border: #e1e3e5;
+    --radius: 8px;
+    --cited: #008060;
+    --cited-bg: #e3f1ed;
+    --partial: #b98900;
+    --partial-bg: #fdf0e8;
+    --miss: #d72c0d;
+    --miss-bg: #fde8e8;
+    --engine-gpt: #10a37f;
+    --engine-px:  #7c3aed;
+    --engine-gem: #ea4335;
+    --engine-cop: #0078d4;
+  }
+
+  body {
+    width: 1600px; height: 900px;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px; line-height: 1.5;
+  }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+    background: #1a1a2e; display: flex; flex-direction: column; padding: 20px 0;
+  }
+  .sidebar-logo { padding: 0 20px 24px; display: flex; align-items: center; gap: 10px; }
+  .sidebar-logo-mark { width: 32px; height: 32px; background: var(--shopify-green); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+  .sidebar-logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+  .sidebar-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase; padding: 0 20px 8px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: rgba(255,255,255,0.65); cursor: default; }
+  .sidebar-item.active { color: #fff; background: rgba(255,255,255,0.1); border-left: 3px solid var(--shopify-green); padding-left: 17px; }
+  .sidebar-item-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+  .sidebar-item.active .sidebar-item-dot { opacity: 1; background: var(--shopify-green); }
+
+  .topbar {
+    position: fixed; left: 220px; right: 0; top: 0; height: 56px;
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 10;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .topbar-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: default; border: none; }
+  .btn-primary { background: var(--shopify-green); color: #fff; }
+  .btn-secondary { background: #fff; color: var(--text-primary); border: 1px solid var(--border); }
+
+  .main { margin-left: 220px; padding-top: 56px; height: 900px; overflow: hidden; }
+  .content { padding: 24px 32px; display: flex; flex-direction: column; gap: 18px; }
+
+  .headline-banner {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 100%);
+    border-radius: 10px; padding: 18px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .headline-text h1 { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.03em; line-height: 1.2; }
+  .headline-text p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 5px; }
+  .pro-badge { background: #7c3aed; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Engine legend */
+  .engine-legend { display: flex; gap: 18px; align-items: center; }
+  .legend-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Prompt cards grid */
+  .prompts-grid { display: flex; flex-direction: column; gap: 12px; }
+
+  .prompt-card {
+    background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .prompt-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .prompt-text { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .prompt-quote { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+  .sov-badge {
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .sov-label { font-size: 10px; color: var(--text-subdued); text-transform: uppercase; letter-spacing: 0.05em; }
+  .sov-val { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+  .sov-trend { font-size: 11px; font-weight: 600; }
+  .trend-up { color: var(--cited); }
+  .trend-dn { color: var(--miss); }
+  .trend-same { color: var(--text-subdued); }
+
+  /* Engine rows */
+  .engines-row { display: flex; padding: 12px 20px; gap: 0; }
+  .engine-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .engine-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .engine-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+  }
+  .status-cited { background: var(--cited-bg); color: var(--cited); }
+  .status-partial { background: var(--partial-bg); color: var(--partial); }
+  .status-miss { background: var(--miss-bg); color: var(--miss); }
+
+  /* Sparkline SVG */
+  .sparkline-row { display: flex; align-items: center; gap: 8px; padding: 0 20px 12px; }
+  .sparkline-label { font-size: 10px; color: var(--text-subdued); width: 80px; }
+
+  /* Upsell footer */
+  .upsell-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f0f4f8; border: 1px solid var(--border); border-radius: 8px;
+    padding: 13px 20px;
+  }
+  .upsell-bar-left { font-size: 13px; color: var(--text-secondary); }
+  .upsell-bar-left strong { color: var(--text-primary); }
+  .upsell-btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; background: #7c3aed; color: #fff; cursor: default; border: none; }
+  .quota-bar { display: flex; align-items: center; gap: 10px; }
+  .quota-track { width: 120px; height: 5px; background: #e1e3e5; border-radius: 3px; }
+  .quota-fill { height: 100%; border-radius: 3px; background: var(--shopify-green); }
+  .quota-label { font-size: 11px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-mark">H</div>
+    <div class="sidebar-logo-text">Hatchloop AEO</div>
+  </div>
+  <div class="sidebar-section-label">Menu</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> AI-Visibility Score</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Fix List</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Product Feed</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Schema &amp; llms.txt</div>
+  <div class="sidebar-item active"><div class="sidebar-item-dot"></div> Citation Tracking
+    <span style="margin-left:auto;font-size:10px;background:#7c3aed;color:#fff;padding:2px 7px;border-radius:10px;font-weight:600;">Pro</span>
+  </div>
+</aside>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">AI Citation Tracking</div>
+    <div class="topbar-subtitle">Pro plan · 10 prompts tracked · Weekly checks · allbirds.myshopify.com</div>
+  </div>
+  <div class="topbar-right">
+    <div class="engine-legend">
+      <span class="legend-dot"><span class="dot" style="background:var(--engine-gpt)"></span> ChatGPT</span>
+      <span class="legend-dot"><span class="dot" style="background:var(--engine-px)"></span> Perplexity</span>
+      <span class="legend-dot"><span class="dot" style="background:var(--engine-gem)"></span> Gemini</span>
+      <span class="legend-dot"><span class="dot" style="background:var(--engine-cop)"></span> Copilot</span>
+    </div>
+    <button class="btn btn-primary">+ Add prompt</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="content">
+
+    <!-- Headline -->
+    <div class="headline-banner">
+      <div class="headline-text">
+        <h1>Track which AI engines mention your store — week over week.</h1>
+        <p>Set buyer-intent prompts. We check them weekly across 4 AI engines and report your share-of-voice.</p>
+      </div>
+      <div class="pro-badge">Pro $79/mo</div>
+    </div>
+
+    <!-- Prompt cards -->
+    <div class="prompts-grid">
+
+      <!-- Prompt 1 -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <div>
+            <div class="prompt-text">"best sustainable running shoes"</div>
+            <div class="prompt-quote">Checked weekly · Last: Jun 13 2026</div>
+          </div>
+          <div class="sov-badge">
+            <span class="sov-label">Share of voice</span>
+            <span class="sov-val" style="color:var(--cited);">3 / 4</span>
+            <span class="sov-trend trend-up">↑ +1 vs last week</span>
+          </div>
+        </div>
+        <div class="engines-row">
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gpt)">ChatGPT</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-px)">Perplexity</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gem)">Gemini</span>
+            <span class="engine-status status-miss">— Not cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-cop)">Copilot</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+        </div>
+        <!-- Sparklines -->
+        <div class="sparkline-row">
+          <span class="sparkline-label">4-week trend</span>
+          <svg width="280" height="28" viewBox="0 0 280 28" xmlns="http://www.w3.org/2000/svg">
+            <!-- Week bars: W-4, W-3, W-2, W-1 -->
+            <!-- ChatGPT cited -->
+            <rect x="10" y="4" width="12" height="20" rx="3" fill="#10a37f" opacity="0.85"/>
+            <rect x="80" y="4" width="12" height="20" rx="3" fill="#10a37f" opacity="0.85"/>
+            <rect x="150" y="12" width="12" height="12" rx="3" fill="#10a37f" opacity="0.4"/>
+            <rect x="220" y="4" width="12" height="20" rx="3" fill="#10a37f" opacity="0.85"/>
+            <!-- Perplexity cited -->
+            <rect x="25" y="4" width="12" height="20" rx="3" fill="#7c3aed" opacity="0.85"/>
+            <rect x="95" y="4" width="12" height="20" rx="3" fill="#7c3aed" opacity="0.85"/>
+            <rect x="165" y="4" width="12" height="20" rx="3" fill="#7c3aed" opacity="0.85"/>
+            <rect x="235" y="4" width="12" height="20" rx="3" fill="#7c3aed" opacity="0.85"/>
+            <!-- Gemini miss -->
+            <rect x="40" y="16" width="12" height="8" rx="3" fill="#ea4335" opacity="0.35"/>
+            <rect x="110" y="16" width="12" height="8" rx="3" fill="#ea4335" opacity="0.35"/>
+            <rect x="180" y="16" width="12" height="8" rx="3" fill="#ea4335" opacity="0.35"/>
+            <rect x="250" y="16" width="12" height="8" rx="3" fill="#ea4335" opacity="0.35"/>
+            <!-- Copilot cited -->
+            <rect x="55" y="4" width="12" height="20" rx="3" fill="#0078d4" opacity="0.85"/>
+            <rect x="125" y="12" width="12" height="12" rx="3" fill="#0078d4" opacity="0.4"/>
+            <rect x="195" y="4" width="12" height="20" rx="3" fill="#0078d4" opacity="0.85"/>
+            <rect x="265" y="4" width="12" height="20" rx="3" fill="#0078d4" opacity="0.85"/>
+            <!-- Week labels -->
+            <text x="32" y="28" font-size="8" fill="#8c9196" text-anchor="middle" font-family="Inter,sans-serif">W-4</text>
+            <text x="102" y="28" font-size="8" fill="#8c9196" text-anchor="middle" font-family="Inter,sans-serif">W-3</text>
+            <text x="172" y="28" font-size="8" fill="#8c9196" text-anchor="middle" font-family="Inter,sans-serif">W-2</text>
+            <text x="242" y="28" font-size="8" fill="#8c9196" text-anchor="middle" font-family="Inter,sans-serif">W-1</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Prompt 2 -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <div>
+            <div class="prompt-text">"allbirds vs On Running — which is more comfortable"</div>
+            <div class="prompt-quote">Checked weekly · Last: Jun 13 2026</div>
+          </div>
+          <div class="sov-badge">
+            <span class="sov-label">Share of voice</span>
+            <span class="sov-val" style="color:var(--cited);">4 / 4</span>
+            <span class="sov-trend trend-up">↑ +2 vs last week</span>
+          </div>
+        </div>
+        <div class="engines-row">
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gpt)">ChatGPT</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-px)">Perplexity</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gem)">Gemini</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-cop)">Copilot</span>
+            <span class="engine-status status-partial">~ Partial</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt 3 -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <div>
+            <div class="prompt-text">"comfortable shoes under $100"</div>
+            <div class="prompt-quote">Checked weekly · Last: Jun 13 2026</div>
+          </div>
+          <div class="sov-badge">
+            <span class="sov-label">Share of voice</span>
+            <span class="sov-val" style="color:var(--partial);">1 / 4</span>
+            <span class="sov-trend trend-dn">↓ -1 vs last week</span>
+          </div>
+        </div>
+        <div class="engines-row">
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gpt)">ChatGPT</span>
+            <span class="engine-status status-miss">— Not cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-px)">Perplexity</span>
+            <span class="engine-status status-miss">— Not cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-gem)">Gemini</span>
+            <span class="engine-status status-cited">✓ Cited</span>
+          </div>
+          <div class="engine-col">
+            <span class="engine-name" style="color:var(--engine-cop)">Copilot</span>
+            <span class="engine-status status-miss">— Not cited</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quota / upsell bar -->
+    <div class="upsell-bar">
+      <div class="upsell-bar-left">
+        <strong>10 of 50 prompts used</strong> · Weekly checks run every Monday at 04:00 UTC · Fixed schedule, no surprise costs
+      </div>
+      <div class="quota-bar">
+        <div class="quota-track"><div class="quota-fill" style="width:20%"></div></div>
+        <span class="quota-label">10 / 50</span>
+      </div>
+      <button class="upsell-btn">+ Add more prompts</button>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1600">
+<title>Hatchloop AEO — Screenshot 4: Product Feed Scorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --shopify-green: #008060;
+    --bg-page: #f1f2f4;
+    --bg-card: #ffffff;
+    --text-primary: #202223;
+    --text-secondary: #6d7175;
+    --text-subdued: #8c9196;
+    --border: #e1e3e5;
+    --radius: 8px;
+    --grade-a: #008060;  --grade-a-bg: #e3f1ed;
+    --grade-b: #2c6ecb;  --grade-b-bg: #e8f0fe;
+    --grade-c: #b98900;  --grade-c-bg: #fdf0e8;
+    --grade-d: #c05717;  --grade-d-bg: #fdf0e8;
+    --grade-f: #d72c0d;  --grade-f-bg: #fde8e8;
+  }
+
+  body {
+    width: 1600px; height: 900px;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px; line-height: 1.5;
+  }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+    background: #1a1a2e; display: flex; flex-direction: column; padding: 20px 0;
+  }
+  .sidebar-logo { padding: 0 20px 24px; display: flex; align-items: center; gap: 10px; }
+  .sidebar-logo-mark { width: 32px; height: 32px; background: var(--shopify-green); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+  .sidebar-logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+  .sidebar-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-transform: uppercase; padding: 0 20px 8px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: rgba(255,255,255,0.65); cursor: default; }
+  .sidebar-item.active { color: #fff; background: rgba(255,255,255,0.1); border-left: 3px solid var(--shopify-green); padding-left: 17px; }
+  .sidebar-item-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+  .sidebar-item.active .sidebar-item-dot { opacity: 1; background: var(--shopify-green); }
+
+  .topbar {
+    position: fixed; left: 220px; right: 0; top: 0; height: 56px;
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 10;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .topbar-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: default; border: none; }
+  .btn-primary { background: var(--shopify-green); color: #fff; }
+  .btn-secondary { background: #fff; color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-danger { background: #d72c0d; color: #fff; }
+
+  .main { margin-left: 220px; padding-top: 56px; height: 900px; overflow: hidden; }
+  .content { padding: 24px 32px; display: flex; flex-direction: column; gap: 18px; }
+
+  .headline-banner {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 100%);
+    border-radius: 10px; padding: 18px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .headline-text h1 { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.03em; line-height: 1.2; }
+  .headline-text p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 5px; }
+  .starter-badge { background: var(--shopify-green); color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Summary stat pills */
+  .summary-row { display: flex; gap: 14px; }
+  .stat-pill {
+    flex: 1; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 3px;
+  }
+  .stat-pill-num { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; }
+  .stat-pill-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+  .stat-pill-note { font-size: 10px; color: var(--text-subdued); }
+  .num-red { color: #d72c0d; }
+  .num-orange { color: #c05717; }
+  .num-green { color: #008060; }
+
+  /* Product table card */
+  .table-card {
+    background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid var(--border); background: #f9fafb;
+  }
+  .table-toolbar-left { display: flex; align-items: center; gap: 10px; }
+  .checkbox { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid var(--border); background: #fff; }
+  .table-toolbar-title { font-size: 13px; font-weight: 700; }
+  .table-toolbar-count { font-size: 11px; color: var(--text-secondary); }
+
+  .product-table { width: 100%; border-collapse: collapse; }
+  .product-table thead tr { background: #f9fafb; }
+  .product-table thead th {
+    padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 600;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  .product-table thead th.center { text-align: center; }
+  .product-table tbody tr { border-bottom: 1px solid #f1f2f4; }
+  .product-table tbody tr:last-child { border-bottom: none; }
+  .product-table tbody td { padding: 10px 12px; font-size: 12px; vertical-align: middle; }
+  .product-table tbody td.center { text-align: center; }
+
+  .product-name { font-weight: 600; color: var(--text-primary); font-size: 12px; }
+  .product-sku { font-size: 10px; color: var(--text-subdued); }
+
+  /* Grade cells */
+  .grade {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 22px; border-radius: 5px;
+    font-size: 11px; font-weight: 700;
+  }
+  .g-a { background: var(--grade-a-bg); color: var(--grade-a); }
+  .g-b { background: var(--grade-b-bg); color: var(--grade-b); }
+  .g-c { background: var(--grade-c-bg); color: var(--grade-c); }
+  .g-d { background: var(--grade-d-bg); color: var(--grade-d); }
+  .g-f { background: var(--grade-f-bg); color: var(--grade-f); }
+
+  .check { color: var(--shopify-green); font-weight: 700; font-size: 13px; }
+  .cross { color: #d72c0d; font-weight: 700; font-size: 13px; }
+  .partial { color: #b98900; font-weight: 700; font-size: 13px; }
+
+  /* Bulk action bar */
+  .bulk-bar {
+    display: flex; align-items: center; gap: 12px; padding: 10px 18px;
+    background: #1a2744; border-radius: 6px; margin: 0 18px 14px;
+  }
+  .bulk-bar-text { font-size: 12px; color: #fff; font-weight: 600; }
+  .bulk-btn { padding: 6px 14px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: default; border: none; }
+  .bulk-btn-white { background: #fff; color: var(--text-primary); }
+  .bulk-btn-green { background: var(--shopify-green); color: #fff; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-mark">H</div>
+    <div class="sidebar-logo-text">Hatchloop AEO</div>
+  </div>
+  <div class="sidebar-section-label">Menu</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> AI-Visibility Score</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Fix List</div>
+  <div class="sidebar-item active"><div class="sidebar-item-dot"></div> Product Feed</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Schema &amp; llms.txt</div>
+  <div class="sidebar-item"><div class="sidebar-item-dot"></div> Citation Tracking
+    <span style="margin-left:auto;font-size:10px;background:#1e3a5f;color:#7ab8f5;padding:2px 7px;border-radius:10px;font-weight:600;">Pro</span>
+  </div>
+</aside>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Product Feed Completeness</div>
+    <div class="topbar-subtitle">Starter plan · 214 products graded · allbirds.myshopify.com</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-secondary">Export CSV</button>
+    <button class="btn btn-primary">Fix selected (3)</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="content">
+
+    <!-- Headline -->
+    <div class="headline-banner">
+      <div class="headline-text">
+        <h1>Find the product gaps that make AI engines skip you.</h1>
+        <p>Every product graded against an AI-discovery rubric. Fix the red cells and your score climbs.</p>
+      </div>
+      <div class="starter-badge">Starter $19/mo</div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="summary-row">
+      <div class="stat-pill">
+        <div class="stat-pill-num num-orange">44%</div>
+        <div class="stat-pill-label">Have good descriptions</div>
+        <div class="stat-pill-note">AI engines need ≥80 words to quote</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num num-red">0%</div>
+        <div class="stat-pill-label">Have image alt text</div>
+        <div class="stat-pill-note">AI cannot parse product visuals</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num num-red">0%</div>
+        <div class="stat-pill-label">Have Product schema</div>
+        <div class="stat-pill-note">ChatGPT Shopping requires JSON-LD</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num num-orange">61%</div>
+        <div class="stat-pill-label">Have GTINs / barcodes</div>
+        <div class="stat-pill-note">Required for AI product matching</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num num-green">88%</div>
+        <div class="stat-pill-label">Have category mapping</div>
+        <div class="stat-pill-note">Standard product type assigned</div>
+      </div>
+    </div>
+
+    <!-- Product table -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-toolbar-left">
+          <div class="checkbox"></div>
+          <span class="table-toolbar-title">Products</span>
+          <span class="table-toolbar-count">214 total · 3 selected</span>
+        </div>
+        <div class="bulk-bar" style="margin:0;padding:8px 14px;">
+          <span class="bulk-bar-text">3 products selected</span>
+          <button class="bulk-btn bulk-btn-white">Add alt text (AI draft)</button>
+          <button class="bulk-btn bulk-btn-green">Inject Product schema</button>
+        </div>
+      </div>
+
+      <table class="product-table">
+        <thead>
+          <tr>
+            <th style="width:32px;"></th>
+            <th>Product</th>
+            <th class="center" style="width:90px;">Description</th>
+            <th class="center" style="width:80px;">Alt Text</th>
+            <th class="center" style="width:70px;">GTIN</th>
+            <th class="center" style="width:80px;">Schema</th>
+            <th class="center" style="width:100px;">Category</th>
+            <th class="center" style="width:70px;">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="checkbox" style="background:#e3f1ed;border-color:#008060;"></div></td>
+            <td><div class="product-name">Tree Runner Go — Natural White/White</div><div class="product-sku">SKU TR-NWW-M10 · 8 variants</div></td>
+            <td class="center"><span class="grade g-a">A</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="grade g-c">C</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox" style="background:#e3f1ed;border-color:#008060;"></div></td>
+            <td><div class="product-name">Wool Runners — Blizzard</div><div class="product-sku">SKU WR-BLZ-W7 · 6 variants</div></td>
+            <td class="center"><span class="grade g-b">B</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="grade g-d">D</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox"></div></td>
+            <td><div class="product-name">Flyer — Natural Black</div><div class="product-sku">SKU FL-NBK-M11 · 5 variants</div></td>
+            <td class="center"><span class="grade g-f">F</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="partial">~</span></td>
+            <td class="center"><span class="grade g-f">F</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox" style="background:#e3f1ed;border-color:#008060;"></div></td>
+            <td><div class="product-name">Wool Pipers — Natural Grey / Medium Grey</div><div class="product-sku">SKU WP-NGY-W8 · 4 variants</div></td>
+            <td class="center"><span class="grade g-a">A</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="grade g-c">C</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox"></div></td>
+            <td><div class="product-name">Tree Dasher 2 — Night / White</div><div class="product-sku">SKU TD2-NWH-M9 · 7 variants</div></td>
+            <td class="center"><span class="grade g-d">D</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="partial">~</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="grade g-f">F</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox"></div></td>
+            <td><div class="product-name">SuperLight Wool Runners — Blizzard/White</div><div class="product-sku">SKU SL-BWH-M10 · 6 variants</div></td>
+            <td class="center"><span class="grade g-b">B</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="check">✓</span></td>
+            <td class="center"><span class="grade g-d">D</span></td>
+          </tr>
+          <tr>
+            <td><div class="checkbox"></div></td>
+            <td><div class="product-name">Mizzle Runners — Natural White / Blizzard</div><div class="product-sku">SKU MZ-NWB-W9 · 5 variants</div></td>
+            <td class="center"><span class="grade g-f">F</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="cross">✗</span></td>
+            <td class="center"><span class="partial">~</span></td>
+            <td class="center"><span class="grade g-f">F</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

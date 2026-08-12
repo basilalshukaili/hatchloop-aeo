@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1600">
+<title>Hatchloop AEO — Screenshot 1: Score Reveal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --shopify-green: #008060;
+    --shopify-green-light: #e3f1ed;
+    --shopify-green-hover: #006e52;
+    --bg-page: #f1f2f4;
+    --bg-card: #ffffff;
+    --bg-nav: #1a1a2e;
+    --text-primary: #202223;
+    --text-secondary: #6d7175;
+    --text-subdued: #8c9196;
+    --border: #e1e3e5;
+    --radius: 8px;
+    --score-d: #c05717;
+    --score-d-bg: #fdf0e8;
+    --score-a: #008060;
+    --score-b: #2c6ecb;
+    --score-c: #b98900;
+    --score-warn: #c05717;
+    --score-crit: #d72c0d;
+    --bar-green: #008060;
+    --bar-blue: #2c6ecb;
+    --bar-orange: #c05717;
+    --bar-red: #d72c0d;
+  }
+
+  body {
+    width: 1600px;
+    height: 900px;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Shopify admin nav sidebar ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+  }
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sidebar-logo-mark {
+    width: 32px; height: 32px;
+    background: var(--shopify-green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+  }
+  .sidebar-logo-text {
+    font-size: 15px; font-weight: 700; color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    padding: 0 20px 8px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px; color: rgba(255,255,255,0.65);
+    border-radius: 0;
+    cursor: default;
+  }
+  .sidebar-item.active {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border-left: 3px solid var(--shopify-green);
+    padding-left: 17px;
+  }
+  .sidebar-item-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; opacity: 0.5;
+  }
+  .sidebar-item.active .sidebar-item-dot { opacity: 1; background: var(--shopify-green); }
+
+  /* ── Top bar ── */
+  .topbar {
+    position: fixed;
+    left: 220px; right: 0; top: 0; height: 56px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    z-index: 10;
+  }
+  .topbar-title {
+    font-size: 17px; font-weight: 700; color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .topbar-subtitle {
+    font-size: 12px; color: var(--text-secondary); margin-top: 1px;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: default; border: none;
+  }
+  .btn-primary { background: var(--shopify-green); color: #fff; }
+  .btn-secondary { background: #fff; color: var(--text-primary); border: 1px solid var(--border); }
+
+  /* ── Main content ── */
+  .main {
+    margin-left: 220px;
+    padding-top: 56px;
+    height: 900px;
+    overflow: hidden;
+  }
+  .content {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Headline overlay ── */
+  .headline-banner {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 100%);
+    border-radius: 10px;
+    padding: 20px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .headline-text h1 {
+    font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  .headline-text p {
+    font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px;
+  }
+  .headline-badge {
+    background: var(--shopify-green); color: #fff;
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  /* ── Cards row ── */
+  .cards-row { display: flex; gap: 20px; }
+
+  /* ── Score card ── */
+  .score-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    width: 300px;
+    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+  }
+  .score-card-label {
+    font-size: 11px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 20px;
+  }
+
+  /* Gauge */
+  .gauge-wrap { position: relative; width: 180px; height: 104px; margin-bottom: 12px; }
+  .gauge-wrap svg { width: 180px; height: 104px; }
+
+  .score-number-wrap {
+    text-align: center; margin-bottom: 14px;
+  }
+  .score-number {
+    font-size: 52px; font-weight: 800; color: var(--score-d);
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .score-denom { font-size: 20px; font-weight: 500; color: var(--text-secondary); }
+  .grade-badge {
+    display: inline-block;
+    padding: 4px 18px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+    background: #fdf0e8; color: var(--score-d);
+    margin-bottom: 10px;
+  }
+  .score-note {
+    font-size: 11px; color: var(--text-subdued); text-align: center; margin-top: 6px;
+  }
+
+  /* ── Sub-scores card ── */
+  .subscores-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+    flex: 1;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .subscores-title {
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .subscore-row { display: flex; flex-direction: column; gap: 5px; }
+  .subscore-header { display: flex; justify-content: space-between; align-items: center; }
+  .subscore-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .subscore-val { font-size: 13px; font-weight: 700; }
+  .subscore-desc { font-size: 11px; color: var(--text-subdued); }
+  .bar-track {
+    height: 7px; background: #f1f2f4; border-radius: 4px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .c-green { color: var(--bar-green); }
+  .c-orange { color: var(--bar-orange); }
+  .c-red { color: var(--bar-red); }
+  .c-blue { color: var(--bar-blue); }
+  .bg-green { background: var(--bar-green); }
+  .bg-orange { background: var(--bar-orange); }
+  .bg-red { background: var(--bar-red); }
+  .bg-blue { background: var(--bar-blue); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-mark">H</div>
+    <div class="sidebar-logo-text">Hatchloop AEO</div>
+  </div>
+  <div class="sidebar-section-label">Menu</div>
+  <div class="sidebar-item active">
+    <div class="sidebar-item-dot"></div> AI-Visibility Score
+  </div>
+  <div class="sidebar-item">
+    <div class="sidebar-item-dot"></div> Fix List
+  </div>
+  <div class="sidebar-item">
+    <div class="sidebar-item-dot"></div> Product Feed
+  </div>
+  <div class="sidebar-item">
+    <div class="sidebar-item-dot"></div> Schema &amp; llms.txt
+  </div>
+  <div class="sidebar-item">
+    <div class="sidebar-item-dot"></div> Citation Tracking
+    <span style="margin-left:auto;font-size:10px;background:#1e3a5f;color:#7ab8f5;padding:2px 7px;border-radius:10px;font-weight:600;">Pro</span>
+  </div>
+</aside>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Hatchloop AEO — AI-Visibility Score</div>
+    <div class="topbar-subtitle">Public scan · allbirds.myshopify.com · Last scanned 2 minutes ago</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-secondary">View fixes</button>
+    <button class="btn btn-primary">Re-scan now</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="content">
+
+    <!-- Headline overlay -->
+    <div class="headline-banner">
+      <div class="headline-text">
+        <h1>Is your Shopify store cited by ChatGPT?<br>Find out in 60 seconds.</h1>
+        <p>Free · No credit card · Real score on your real store</p>
+      </div>
+      <div class="headline-badge">Free plan</div>
+    </div>
+
+    <!-- Score + sub-scores row -->
+    <div class="cards-row">
+
+      <!-- Score card -->
+      <div class="score-card">
+        <div class="score-card-label">AI-Visibility Score</div>
+
+        <!-- Gauge SVG -->
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 180 104" xmlns="http://www.w3.org/2000/svg">
+            <!-- Track arc -->
+            <path d="M 20 100 A 70 70 0 0 1 160 100"
+                  fill="none" stroke="#f1f2f4" stroke-width="12" stroke-linecap="round"/>
+            <!-- Fill arc — 47% of 180° = 84.6° -->
+            <!-- Using stroke-dasharray trick on a full semicircle -->
+            <!-- Circumference of r=70 semicircle ≈ 219.9; 47% = 103.4 -->
+            <path d="M 20 100 A 70 70 0 0 1 160 100"
+                  fill="none" stroke="#c05717" stroke-width="12" stroke-linecap="round"
+                  stroke-dasharray="103 220" />
+            <!-- Needle line -->
+            <line x1="90" y1="100" x2="52" y2="48" stroke="#c05717" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="90" cy="100" r="5" fill="#c05717"/>
+            <!-- Labels -->
+            <text x="16" y="118" font-size="10" fill="#8c9196" font-family="Inter,sans-serif" font-weight="600">0</text>
+            <text x="86" y="26" font-size="10" fill="#8c9196" font-family="Inter,sans-serif" font-weight="600" text-anchor="middle">50</text>
+            <text x="157" y="118" font-size="10" fill="#8c9196" font-family="Inter,sans-serif" font-weight="600" text-anchor="end">100</text>
+          </svg>
+        </div>
+
+        <div class="score-number-wrap">
+          <span class="score-number c-orange">47</span><span class="score-denom"> / 100</span>
+        </div>
+        <div class="grade-badge">Grade D</div>
+        <div class="score-note">Weighted from 5 live signals<br>AI engines will skip this store today</div>
+      </div>
+
+      <!-- Sub-scores card -->
+      <div class="subscores-card">
+        <div class="subscores-title">Sub-scores</div>
+
+        <!-- Discoverability 90 -->
+        <div class="subscore-row">
+          <div class="subscore-header">
+            <span class="subscore-name">Discoverability</span>
+            <span class="subscore-val c-green">90 / 100</span>
+          </div>
+          <div class="subscore-desc">llms.txt present, robots.txt allows AI crawlers</div>
+          <div class="bar-track"><div class="bar-fill bg-green" style="width:90%"></div></div>
+        </div>
+
+        <!-- Feed Completeness 49 -->
+        <div class="subscore-row">
+          <div class="subscore-header">
+            <span class="subscore-name">Product Feed</span>
+            <span class="subscore-val c-orange">49 / 100</span>
+          </div>
+          <div class="subscore-desc">Descriptions, alt text, GTINs, structured attributes</div>
+          <div class="bar-track"><div class="bar-fill bg-orange" style="width:49%"></div></div>
+        </div>
+
+        <!-- Schema Coverage 0 -->
+        <div class="subscore-row">
+          <div class="subscore-header">
+            <span class="subscore-name">Schema Coverage</span>
+            <span class="subscore-val c-red">0 / 100</span>
+          </div>
+          <div class="subscore-desc">No Product, Offer, FAQPage, or Organization JSON-LD found</div>
+          <div class="bar-track"><div class="bar-fill bg-red" style="width:1%"></div></div>
+        </div>
+
+        <!-- Answer Readiness 0 -->
+        <div class="subscore-row">
+          <div class="subscore-header">
+            <span class="subscore-name">Answer Readiness</span>
+            <span class="subscore-val c-red">0 / 100</span>
+          </div>
+          <div class="subscore-desc">No FAQ schema, buying guides, or question-answering copy</div>
+          <div class="bar-track"><div class="bar-fill bg-red" style="width:1%"></div></div>
+        </div>
+
+        <!-- Multi-Market 100 -->
+        <div class="subscore-row">
+          <div class="subscore-header">
+            <span class="subscore-name">Multi-Market Hygiene</span>
+            <span class="subscore-val c-green">100 / 100</span>
+          </div>
+          <div class="subscore-desc">Per-locale llms.txt, hreflang, currency coverage</div>
+          <div class="bar-track"><div class="bar-fill bg-green" style="width:100%"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /cards-row -->
+
+  </div>
+</div>
+
+</body>
+</html>

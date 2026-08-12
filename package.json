@@ -1,0 +1,41 @@
+{
+  "name": "hatchloop-aeo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Hatchloop AEO — Shopify embedded app for AI-Visibility scoring and answer engine optimization.",
+  "scripts": {
+    "build": "remix build",
+    "dev": "remix dev --manual",
+    "start": "remix-serve ./build/server/index.js",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "typecheck": "tsc"
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  },
+  "dependencies": {
+    "@remix-run/node": "^2.8.0",
+    "@remix-run/react": "^2.8.0",
+    "@remix-run/serve": "^2.8.0",
+    "@shopify/app-bridge-react": "^4.2.0",
+    "@shopify/polaris": "^12.0.0",
+    "@shopify/shopify-app-remix": "^3.4.0",
+    "@shopify/shopify-app-session-storage-prisma": "^5.1.0",
+    "@prisma/client": "^5.14.0",
+    "anthropic": "^0.52.0",
+    "isomorphic-fetch": "^3.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.8.0",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0",
+    "prisma": "^5.14.0",
+    "typescript": "^5.4.2",
+    "vite": "^5.2.0"
+  }
+}

@@ -1,0 +1,52 @@
+# shopify.app.toml — Hatchloop AEO
+#
+# client_id is wired (2026-06-14).
+# DEPLOY-TODO: replace REPLACE_WITH_DEPLOY_URL below with the real production
+# or tunnel URL before running `shopify app deploy` or installing on a store.
+# See apps/aeo-app/DEPLOY-CHECKLIST.md for the full sequence.
+
+name = "Hatchloop AEO"
+client_id = "f585e00fb49a58947efdbe9c8729934b"  # SHOPIFY_APP_CLIENT_ID (rotated 2026-08-12) — real Partner app, org 4968387
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""  # e.g. your-store.myshopify.com
+
+[access_scopes]
+# Minimum scopes for the authenticated deep-report engine (aeo_engine_authed.js).
+# read_products       — to grade product descriptions, SEO meta, images, variants, categories
+# read_content        — to read pages (FAQ pages, buying guides) for answer-readiness signals
+# read_themes         — to detect active theme, inject Theme App Extensions cleanly
+# write_themes        — required to push the llms.txt liquid snippet override (Starter/Pro)
+# read_online_store_pages — to enumerate published pages
+scopes = "read_products,write_products,read_content,read_themes,write_themes,read_online_store_pages"
+
+[auth]
+# DEPLOY-TODO: replace REPLACE_WITH_DEPLOY_URL with your Cloudflare tunnel URL
+# (for dev) or production hostname (for prod) before running `shopify app deploy`.
+# Example tunnel: https://xxxx.trycloudflare.com
+# These must also be registered in the Partner Dashboard under App Setup > URLs.
+redirect_urls = [
+  "https://REPLACE_WITH_DEPLOY_URL/auth/callback",
+  "https://REPLACE_WITH_DEPLOY_URL/auth/shopify/callback",
+]
+
+[webhooks]
+api_version = "2026-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks/app-uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["products/create", "products/update"]
+  uri = "/webhooks/products-update"
+
+[pos]
+embedded = false
+
+[app_proxy]
+# Optional: if you want /a/aeo on the storefront as a proxy endpoint
+# prefix = "apps"
+# subpath = "aeo"
+# url = "https://REPLACE_WITH_YOUR_APP_URL/proxy"
