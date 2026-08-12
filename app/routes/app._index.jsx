@@ -29,7 +29,18 @@ import { runPublicScan, runAuthenticatedScan, getTier, gateFixes } from '../engi
 
 // ── Loader ────────────────────────────────────────────────────────────────────
 export async function loader({ request }) {
-  const shop = getShopFromRequest(request);
+  // Real mode: authenticate up front and use the canonical session.shop (not the
+  // URL ?shop= param, which is absent on in-app navigations and would otherwise
+  // fall back to the mock store — making a real store scan the wrong domain).
+  // Reuse this `admin` object for the authenticated deep scan below.
+  let shop, admin = null;
+  if (IS_MOCK) {
+    shop = getShopFromRequest(request);
+  } else {
+    const auth = await authenticateAdmin(request);
+    admin = auth.admin;
+    shop = auth.session.shop;
+  }
   const tier = await getTier(shop);
 
   // Always run the public scan (no auth required)
@@ -52,7 +63,7 @@ export async function loader({ request }) {
   // Authenticated deep scan (Starter / Pro or if session has real token)
   if (tier !== 'free' && !IS_MOCK) {
     try {
-      const { admin } = await authenticateAdmin(request);
+      // reuse the `admin` authenticated at the top of the loader
       const adminGraphqlFn = async (query, variables) => {
         const res = await admin.graphql(query, { variables });
         const json = await res.json();

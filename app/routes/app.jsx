@@ -1,29 +1,38 @@
 /**
  * app.jsx — top-level layout route for all authenticated embedded-app pages.
- * Wraps every child route in the Shopify App Bridge provider.
  *
- * MOCK MODE: AppBridgeProvider works without a real Partner app in local dev —
- * it just won't talk to a real Shopify Admin. The dashboard still renders.
+ * REAL mode (AUTH_MODE=shopify): the loader calls authenticate.admin(request),
+ * which (with the token-exchange strategy) reads the id_token from the embedded
+ * URL and exchanges it for an access token / session. App Bridge itself is loaded
+ * globally from root.jsx (the CDN script) so client-side navigations carry a
+ * session token. We deliberately do NOT import @shopify/shopify-app-remix/react's
+ * AppProvider: its ESM uses `import … with { type: 'json' }`, which this app's
+ * classic Remix compiler (esbuild) cannot parse. Polaris provides the UI shell.
  *
- * WIRE POINT: Replace the apiKey prop with your real SHOPIFY_API_KEY env var
- * once the Partner app exists. In production this value comes from the loader.
+ * MOCK mode (AUTH_MODE=mock): standalone Polaris only — no auth — so the dashboard
+ * renders locally for previews. Unchanged.
  */
 
 import { json } from '@remix-run/node';
 import { Outlet, useLoaderData, NavLink } from '@remix-run/react';
 import { AppProvider as PolarisAppProvider } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import { IS_MOCK } from '../shopify.server.js';
+import { authenticateAdmin, IS_MOCK } from '../shopify.server.js';
 
 export async function loader({ request }) {
-  return json({
-    apiKey: process.env.SHOPIFY_API_KEY || 'MOCK_API_KEY',
-    isMock: IS_MOCK,
-  });
+  if (!IS_MOCK) {
+    // REAL: validates + establishes the Shopify session (token exchange reads the
+    // id_token from the embedded request). Throws a redirect if not installed.
+    await authenticateAdmin(request);
+  }
+  return json({ isMock: IS_MOCK });
 }
 
+const navStyle = { display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #e1e3e5', fontSize: '14px' };
+const linkStyle = (isActive) => ({ fontWeight: isActive ? 700 : 400, color: '#202223', textDecoration: 'none' });
+
 export default function AppLayout() {
-  const { apiKey, isMock } = useLoaderData();
+  const { isMock } = useLoaderData();
 
   return (
     <PolarisAppProvider i18n={enTranslations}>
@@ -40,15 +49,14 @@ export default function AppLayout() {
           See apps/aeo-app/README.md to connect a Partner app.
         </div>
       )}
-      {/* App nav — links injected into the Polaris frame when App Bridge is live */}
-      <nav style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #e1e3e5', fontSize: '14px' }}>
-        <NavLink to="/app" end style={({ isActive }) => ({ fontWeight: isActive ? 700 : 400, color: '#202223', textDecoration: 'none' })}>
+      <nav style={navStyle}>
+        <NavLink to="/app" end style={({ isActive }) => linkStyle(isActive)}>
           AEO Score
         </NavLink>
-        <NavLink to="/app/descriptions" style={({ isActive }) => ({ fontWeight: isActive ? 700 : 400, color: '#202223', textDecoration: 'none' })}>
+        <NavLink to="/app/descriptions" style={({ isActive }) => linkStyle(isActive)}>
           AI Descriptions
         </NavLink>
-        <NavLink to="/app/billing" style={({ isActive }) => ({ fontWeight: isActive ? 700 : 400, color: '#202223', textDecoration: 'none' })}>
+        <NavLink to="/app/billing" style={({ isActive }) => linkStyle(isActive)}>
           Plans
         </NavLink>
       </nav>

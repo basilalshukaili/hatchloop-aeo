@@ -39,6 +39,12 @@ const shopify = shopifyApp({
   apiVersion: '2026-01',
   sessionStorage: new PrismaSessionStorage(prisma),
   isEmbeddedApp: true,
+  // Token-exchange embedded auth (Shopify managed install) — no OAuth redirect
+  // dance; the id_token in the embedded URL is exchanged for an access token in
+  // the app.jsx loader. Requires scopes declared in the app config (managed install).
+  future: {
+    unstable_newEmbeddedAuthStrategy: true,
+  },
   billing: {
     [BILLING_PLANS.starter]: {
       amount: 12,
