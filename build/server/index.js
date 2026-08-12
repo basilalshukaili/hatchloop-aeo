@@ -45,7 +45,7 @@ var prisma, BILLING_PLANS, shopify, authenticate, unauthenticated, login, regist
       isEmbeddedApp: !0,
       billing: {
         [BILLING_PLANS.starter]: {
-          amount: 19,
+          amount: 12,
           currencyCode: "USD",
           interval: BillingInterval.Every30Days,
           trialDays: 7
@@ -6021,7 +6021,7 @@ function buttonFrom({
   onAction,
   plain,
   destructive,
-  ...action6
+  ...action9
 }, overrides, key) {
   let plainVariant = plain ? "plain" : void 0, destructiveVariant = destructive ? "primary" : void 0, tone = !overrides?.tone && destructive ? "critical" : overrides?.tone;
   return /* @__PURE__ */ React31.createElement(Button, Object.assign({
@@ -6029,7 +6029,7 @@ function buttonFrom({
     onClick: onAction,
     tone,
     variant: plainVariant || destructiveVariant
-  }, action6, overrides), content);
+  }, action9, overrides), content);
 }
 
 // node_modules/@shopify/polaris/build/esm/components/Card/Card.js
@@ -7550,7 +7550,7 @@ function Labelled({
   id,
   label,
   error,
-  action: action6,
+  action: action9,
   helpText,
   children,
   labelHidden,
@@ -7559,9 +7559,9 @@ function Labelled({
   readOnly,
   ...rest
 }) {
-  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action6 ? /* @__PURE__ */ React52.createElement("div", {
+  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action9 ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.Action
-  }, buttonFrom(action6, {
+  }, buttonFrom(action9, {
     variant: "plain"
   })) : null, helpTextMarkup = helpText ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.HelpText,
@@ -8646,12 +8646,12 @@ function ActionsMeasurer({
   useEffect13(() => {
     handleMeasurement();
   }, [handleMeasurement, actions, groups]);
-  let actionsMarkup = actions.map((action6) => {
+  let actionsMarkup = actions.map((action9) => {
     let {
       content,
       onAction,
       ...rest
-    } = action6;
+    } = action9;
     return /* @__PURE__ */ React66.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8721,12 +8721,12 @@ function Actions({
       hasMeasured: containerWidth !== 1 / 0
     });
   }, [containerWidth, disclosureWidth, actions, groups, actionsWidths, setState]);
-  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action6) => {
+  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action9) => {
     let {
       content,
       onAction,
       ...rest
-    } = action6;
+    } = action9;
     return /* @__PURE__ */ React67.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8734,18 +8734,18 @@ function Actions({
   }), filteredGroups = (hiddenGroups.length > 0 || hiddenActions.length > 0 ? [...groupsOrDefault, defaultRollupGroup] : [...groupsOrDefault]).filter((group, index) => {
     let hasNoGroupsProp = groupsOrDefault.length === 0, isVisibleGroup = visibleGroups.includes(index), isDefaultGroup = group === defaultRollupGroup;
     return hasNoGroupsProp ? hiddenActions.length > 0 : isDefaultGroup ? !0 : isVisibleGroup;
-  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action6) => action6 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
+  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action9) => action9 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
     let {
       title,
       actions: groupActions,
       ...rest
-    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action6) => (isMenuGroup(action6) ? sections.push({
-      title: action6.title,
-      items: action6.actions.map((sectionAction) => ({
+    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action9) => (isMenuGroup(action9) ? sections.push({
+      title: action9.title,
+      items: action9.actions.map((sectionAction) => ({
         ...sectionAction,
-        disabled: action6.disabled || sectionAction.disabled
+        disabled: action9.disabled || sectionAction.disabled
       }))
-    }) : actions2.push(action6), [actions2, sections]), [[], []]);
+    }) : actions2.push(action9), [actions2, sections]), [[], []]);
     return isDefaultGroup ? /* @__PURE__ */ React67.createElement(MenuGroup, Object.assign({
       key: title,
       title,
@@ -8837,9 +8837,9 @@ function convertGroupToSection({
 }) {
   return {
     title,
-    items: actions.map((action6) => ({
-      ...action6,
-      disabled: disabled || action6.disabled
+    items: actions.map((action9) => ({
+      ...action9,
+      disabled: disabled || action9.disabled
     }))
   };
 }
@@ -9030,7 +9030,7 @@ function BannerLayout({
   icon,
   hideIcon,
   onDismiss,
-  action: action6,
+  action: action9,
   secondaryAction,
   title,
   children
@@ -9048,9 +9048,9 @@ function BannerLayout({
     }, /* @__PURE__ */ React71.createElement(Icon, {
       source: icon ?? bannerAttributes[bannerTone].icon
     })),
-    actionButtons: action6 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action6 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
-      onClick: action6.onAction
-    }, action6), action6.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+    actionButtons: action9 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action9 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+      onClick: action9.onAction
+    }, action9), action9.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
       onClick: secondaryAction.onAction
     }, secondaryAction), secondaryAction.content)) : null,
     dismissButton: onDismiss ? /* @__PURE__ */ React71.createElement(Button, {
@@ -10222,7 +10222,7 @@ function EmptyState({
   largeImage,
   imageContained,
   fullWidth = !1,
-  action: action6,
+  action: action9,
   secondaryAction,
   footerContent
 }) {
@@ -10258,7 +10258,7 @@ function EmptyState({
     as: "span",
     alignment: "center",
     variant: "bodySm"
-  }, footerContent)) : null, primaryActionMarkup = action6 ? buttonFrom(action6, {
+  }, footerContent)) : null, primaryActionMarkup = action9 ? buttonFrom(action9, {
     variant: "primary",
     size: "medium"
   }) : null, headingMarkup = heading ? /* @__PURE__ */ React81.createElement(Box, {
@@ -10674,18 +10674,18 @@ function PrimaryActionMarkup({
     printHidden: !0
   }, actionMarkup));
 }
-function shouldShowIconOnly(isMobile, action6) {
+function shouldShowIconOnly(isMobile, action9) {
   let {
     content,
     accessibilityLabel
-  } = action6, {
+  } = action9, {
     icon
-  } = action6;
+  } = action9;
   return icon == null ? {
-    ...action6,
+    ...action9,
     icon: void 0
   } : (isMobile && (accessibilityLabel = accessibilityLabel || content, content = void 0), {
-    ...action6,
+    ...action9,
     content,
     accessibilityLabel,
     icon
@@ -11264,14 +11264,14 @@ function App() {
   ] });
 }
 
-// app/routes/webhooks.app-uninstalled.jsx
-var webhooks_app_uninstalled_exports = {};
-__export(webhooks_app_uninstalled_exports, {
+// app/routes/webhooks.customers-data-request.jsx
+var webhooks_customers_data_request_exports = {};
+__export(webhooks_customers_data_request_exports, {
   action: () => action
 });
 import { json } from "@remix-run/node";
 async function action({ request }) {
-  if (request.headers.get("X-Shopify-Topic") !== "app/uninstalled")
+  if (request.headers.get("X-Shopify-Topic") !== "customers/data_request")
     return json({ ok: !1, error: "wrong topic" }, 400);
   let body;
   try {
@@ -11279,29 +11279,86 @@ async function action({ request }) {
   } catch {
     return json({ ok: !1, error: "invalid body" }, 400);
   }
+  let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
+  return console.log(`[webhook] customers/data_request \u2014 shop: ${shop}, customer: ${customer}`), json({ ok: !0 });
+}
+
+// app/routes/webhooks.customers-redact.jsx
+var webhooks_customers_redact_exports = {};
+__export(webhooks_customers_redact_exports, {
+  action: () => action2
+});
+import { json as json2 } from "@remix-run/node";
+async function action2({ request }) {
+  if (request.headers.get("X-Shopify-Topic") !== "customers/redact")
+    return json2({ ok: !1, error: "wrong topic" }, 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json2({ ok: !1, error: "invalid body" }, 400);
+  }
+  let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
+  return console.log(`[webhook] customers/redact \u2014 shop: ${shop}, customer: ${customer}`), json2({ ok: !0 });
+}
+
+// app/routes/webhooks.app-uninstalled.jsx
+var webhooks_app_uninstalled_exports = {};
+__export(webhooks_app_uninstalled_exports, {
+  action: () => action3
+});
+import { json as json3 } from "@remix-run/node";
+async function action3({ request }) {
+  if (request.headers.get("X-Shopify-Topic") !== "app/uninstalled")
+    return json3({ ok: !1, error: "wrong topic" }, 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json3({ ok: !1, error: "invalid body" }, 400);
+  }
   let shop = body.domain || body.myshopify_domain;
-  return console.log(`[webhook] app/uninstalled for shop: ${shop}`), json({ ok: !0 });
+  return console.log(`[webhook] app/uninstalled for shop: ${shop}`), json3({ ok: !0 });
 }
 
 // app/routes/webhooks.products-update.jsx
 var webhooks_products_update_exports = {};
 __export(webhooks_products_update_exports, {
-  action: () => action2
+  action: () => action4
 });
-import { json as json2 } from "@remix-run/node";
-async function action2({ request }) {
+import { json as json4 } from "@remix-run/node";
+async function action4({ request }) {
   let topic = request.headers.get("X-Shopify-Topic"), shop = request.headers.get("X-Shopify-Shop-Domain");
-  return ["products/create", "products/update"].includes(topic) ? (console.log(`[webhook] ${topic} for shop: ${shop} \u2014 invalidating scan cache`), json2({ ok: !0 })) : json2({ ok: !1, error: "wrong topic" }, 400);
+  return ["products/create", "products/update"].includes(topic) ? (console.log(`[webhook] ${topic} for shop: ${shop} \u2014 invalidating scan cache`), json4({ ok: !0 })) : json4({ ok: !1, error: "wrong topic" }, 400);
+}
+
+// app/routes/webhooks.shop-redact.jsx
+var webhooks_shop_redact_exports = {};
+__export(webhooks_shop_redact_exports, {
+  action: () => action5
+});
+import { json as json5 } from "@remix-run/node";
+async function action5({ request }) {
+  if (request.headers.get("X-Shopify-Topic") !== "shop/redact")
+    return json5({ ok: !1, error: "wrong topic" }, 400);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json5({ ok: !1, error: "invalid body" }, 400);
+  }
+  let shop = body.shop_domain;
+  return console.log(`[webhook] shop/redact \u2014 shop: ${shop}`), json5({ ok: !0 });
 }
 
 // app/routes/app.descriptions.jsx
 var app_descriptions_exports = {};
 __export(app_descriptions_exports, {
-  action: () => action3,
+  action: () => action6,
   default: () => DescriptionsPage,
   loader: () => loader
 });
-import { json as json3 } from "@remix-run/node";
+import { json as json6 } from "@remix-run/node";
 import { useLoaderData, useNavigation, useFetcher } from "@remix-run/react";
 
 // app/shopify.server.js
@@ -11502,7 +11559,7 @@ async function loader({ request }) {
   let thinProducts = products.filter(
     (p) => (p.descriptionHtml || "").replace(/<[^>]*>/g, "").trim().length < THIN_THRESHOLD
   ), isFree = tier === "free", visible = isFree ? thinProducts.slice(0, FREE_TIER_LIMIT) : thinProducts, lockedCount = isFree ? Math.max(0, thinProducts.length - FREE_TIER_LIMIT) : 0;
-  return json3({
+  return json6({
     shop,
     tier,
     isMock: IS_MOCK,
@@ -11512,7 +11569,7 @@ async function loader({ request }) {
     fetchError
   });
 }
-async function action3({ request }) {
+async function action6({ request }) {
   let shop = getShopFromRequest(request), tier = await getTier(shop), formData = await request.formData(), intent = formData.get("intent"), productId = formData.get("productId"), productTitle = formData.get("productTitle"), productType = formData.get("productType") || "", vendor = formData.get("vendor") || "", tags = (formData.get("tags") || "").split(",").filter(Boolean);
   if (intent === "generate")
     try {
@@ -11522,16 +11579,16 @@ async function action3({ request }) {
         vendor,
         tags
       });
-      return json3({ ok: !0, intent: "generate", productId, description });
+      return json6({ ok: !0, intent: "generate", productId, description });
     } catch (e) {
-      return json3({ ok: !1, intent: "generate", productId, error: e.message }, { status: 500 });
+      return json6({ ok: !1, intent: "generate", productId, error: e.message }, { status: 500 });
     }
   if (intent === "write") {
     let description = formData.get("description");
     if (!description)
-      return json3({ ok: !1, intent: "write", productId, error: "No description provided" }, { status: 400 });
+      return json6({ ok: !1, intent: "write", productId, error: "No description provided" }, { status: 400 });
     if (IS_MOCK)
-      return json3({ ok: !0, intent: "write", productId });
+      return json6({ ok: !0, intent: "write", productId });
     try {
       let { admin } = await authenticateAdmin(request), userErrors = (await (await admin.graphql(PRODUCT_UPDATE_MUTATION, {
         variables: {
@@ -11543,12 +11600,12 @@ async function action3({ request }) {
       })).json()).data?.productUpdate?.userErrors ?? [];
       if (userErrors.length)
         throw new Error(userErrors.map((e) => e.message).join("; "));
-      return json3({ ok: !0, intent: "write", productId });
+      return json6({ ok: !0, intent: "write", productId });
     } catch (e) {
-      return json3({ ok: !1, intent: "write", productId, error: e.message }, { status: 500 });
+      return json6({ ok: !1, intent: "write", productId, error: e.message }, { status: 500 });
     }
   }
-  return json3({ ok: !1, error: "Unknown intent" }, { status: 400 });
+  return json6({ ok: !1, error: "Unknown intent" }, { status: 400 });
 }
 function stripHtml(html) {
   return (html || "").replace(/<[^>]*>/g, "").trim();
@@ -11706,12 +11763,12 @@ __export(app_citations_exports, {
   default: () => CitationsPage,
   loader: () => loader2
 });
-import { json as json4 } from "@remix-run/node";
+import { json as json7 } from "@remix-run/node";
 import { useLoaderData as useLoaderData2 } from "@remix-run/react";
 import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 async function loader2({ request }) {
   let shop = getShopFromRequest(request), tier = await getTier(shop);
-  return tier !== "pro" ? json4({ authorized: !1, tier }) : json4({
+  return tier !== "pro" ? json7({ authorized: !1, tier }) : json7({
     authorized: !0,
     tier,
     prompts: [],
@@ -11774,17 +11831,17 @@ function CitationsPage() {
 // app/routes/app.billing.jsx
 var app_billing_exports = {};
 __export(app_billing_exports, {
-  action: () => action4,
+  action: () => action7,
   default: () => BillingPage,
   loader: () => loader3
 });
-import { json as json5 } from "@remix-run/node";
+import { json as json8 } from "@remix-run/node";
 import { useLoaderData as useLoaderData3, useSearchParams, Form } from "@remix-run/react";
 import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
 async function loader3({ request }) {
-  return json5({ isMock: IS_MOCK });
+  return json8({ isMock: IS_MOCK });
 }
-async function action4({ request }) {
+async function action7({ request }) {
   let planId = (await request.formData()).get("plan");
   return requestBilling(request, planId);
 }
@@ -11808,7 +11865,7 @@ var PLANS = [
   {
     id: "starter",
     name: "Starter",
-    price: "$19",
+    price: "$12",
     period: "per month",
     badge: "Most popular",
     features: [
@@ -11879,11 +11936,11 @@ function BillingPage() {
 // app/routes/app._index.jsx
 var app_index_exports = {};
 __export(app_index_exports, {
-  action: () => action5,
+  action: () => action8,
   default: () => Dashboard,
   loader: () => loader4
 });
-import { json as json6 } from "@remix-run/node";
+import { json as json9 } from "@remix-run/node";
 import { useLoaderData as useLoaderData4, useNavigation as useNavigation2, Form as Form2 } from "@remix-run/react";
 import { Fragment as Fragment2, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
 async function loader4({ request }) {
@@ -11897,10 +11954,10 @@ async function loader4({ request }) {
     try {
       let { admin } = await authenticateAdmin(request);
       deepReport = await runAuthenticatedScan({ adminGraphqlFn: async (query, variables) => {
-        let json8 = await (await admin.graphql(query, { variables })).json();
-        if (json8.errors)
-          throw new Error(json8.errors.map((e) => e.message).join("; "));
-        return json8.data;
+        let json11 = await (await admin.graphql(query, { variables })).json();
+        if (json11.errors)
+          throw new Error(json11.errors.map((e) => e.message).join("; "));
+        return json11.data;
       }, publicReport, sample: 100 });
     } catch (e) {
       deepError = e.message;
@@ -11908,7 +11965,7 @@ async function loader4({ request }) {
   else
     tier !== "free" && IS_MOCK && (deepError = "Authenticated scan unavailable in MOCK mode \u2014 install on a real store to enable.");
   let activeReport = deepReport || publicReport, allFixes = activeReport ? activeReport.allFixes || [] : [], { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
-  return json6({
+  return json9({
     shop,
     tier,
     isMock: IS_MOCK,
@@ -11922,8 +11979,8 @@ async function loader4({ request }) {
     analyzedAt: activeReport ? activeReport.analyzedAt : null
   });
 }
-async function action5({ request }) {
-  return json6({ ok: !0 });
+async function action8({ request }) {
+  return json9({ ok: !0 });
 }
 var SCORE_COLOR = (s) => s >= 80 ? "success" : s >= 65 ? "info" : s >= 50 ? "warning" : "critical", GRADE_COLOR = { A: "success", B: "info", C: "attention", D: "warning", F: "critical" }, SUB_SCORE_LABELS = {
   discoverability: { label: "Discoverability", desc: "llms.txt, agents.md, agentic sitemap, robots.txt" },
@@ -12058,7 +12115,7 @@ function Dashboard() {
               Banner,
               {
                 tone: "attention",
-                title: `${lockedCount} more fix${lockedCount > 1 ? "es" : ""} available on Starter ($19/mo)`,
+                title: `${lockedCount} more fix${lockedCount > 1 ? "es" : ""} available on Starter ($12/mo)`,
                 action: { content: "Upgrade to Starter", url: "/app/billing?plan=starter" },
                 children: /* @__PURE__ */ jsx6("p", { children: "Unlock every ranked fix, one-click schema injection, and the full product feed completeness scorer. No risk \u2014 cancel any time." })
               }
@@ -12128,17 +12185,27 @@ async function loader5({ request }) {
   return IS_MOCK ? redirect("/app") : (await authenticateAdmin(request), redirect("/app"));
 }
 
+// app/routes/_index.jsx
+var index_exports = {};
+__export(index_exports, {
+  loader: () => loader6
+});
+import { redirect as redirect2 } from "@remix-run/node";
+function loader6() {
+  return redirect2("https://hatchloop.dev");
+}
+
 // app/routes/app.jsx
 var app_exports = {};
 __export(app_exports, {
   default: () => AppLayout,
-  loader: () => loader6
+  loader: () => loader7
 });
-import { json as json7 } from "@remix-run/node";
+import { json as json10 } from "@remix-run/node";
 import { Outlet as Outlet2, useLoaderData as useLoaderData5, NavLink } from "@remix-run/react";
 import { jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
-async function loader6({ request }) {
-  return json7({
+async function loader7({ request }) {
+  return json10({
     apiKey: process.env.SHOPIFY_API_KEY || "MOCK_API_KEY",
     isMock: IS_MOCK
   });
@@ -12164,7 +12231,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-YVTZQHLV.js", imports: ["/build/_shared/chunk-3IKC2CFJ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-3OTIBELW.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !1, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-WQJNUYWI.js", imports: ["/build/_shared/chunk-YFWTCXRW.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-UWTZGEZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-ODBQJUDJ.js", imports: ["/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-V3INI2LN.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-XC4KVYI4.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "79cdb8eb", hmr: void 0, url: "/build/manifest-79CDB8EB.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-YVTZQHLV.js", imports: ["/build/_shared/chunk-3IKC2CFJ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-3OTIBELW.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !1, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-WQJNUYWI.js", imports: ["/build/_shared/chunk-YFWTCXRW.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-ZGUU5BBK.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-P6H6IDR7.js", imports: ["/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-V3INI2LN.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-XC4KVYI4.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-U75JZBYS.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "ef825a06", hmr: void 0, url: "/build/manifest-EF825A06.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {
@@ -12175,6 +12242,22 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     index: void 0,
     caseSensitive: void 0,
     module: root_exports
+  },
+  "routes/webhooks.customers-data-request": {
+    id: "routes/webhooks.customers-data-request",
+    parentId: "root",
+    path: "webhooks/customers-data-request",
+    index: void 0,
+    caseSensitive: void 0,
+    module: webhooks_customers_data_request_exports
+  },
+  "routes/webhooks.customers-redact": {
+    id: "routes/webhooks.customers-redact",
+    parentId: "root",
+    path: "webhooks/customers-redact",
+    index: void 0,
+    caseSensitive: void 0,
+    module: webhooks_customers_redact_exports
   },
   "routes/webhooks.app-uninstalled": {
     id: "routes/webhooks.app-uninstalled",
@@ -12191,6 +12274,14 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     index: void 0,
     caseSensitive: void 0,
     module: webhooks_products_update_exports
+  },
+  "routes/webhooks.shop-redact": {
+    id: "routes/webhooks.shop-redact",
+    parentId: "root",
+    path: "webhooks/shop-redact",
+    index: void 0,
+    caseSensitive: void 0,
+    module: webhooks_shop_redact_exports
   },
   "routes/app.descriptions": {
     id: "routes/app.descriptions",
@@ -12231,6 +12322,14 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     index: void 0,
     caseSensitive: void 0,
     module: auth_exports
+  },
+  "routes/_index": {
+    id: "routes/_index",
+    parentId: "root",
+    path: void 0,
+    index: !0,
+    caseSensitive: void 0,
+    module: index_exports
   },
   "routes/app": {
     id: "routes/app",

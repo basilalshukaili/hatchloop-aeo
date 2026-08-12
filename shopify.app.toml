@@ -44,11 +44,10 @@ api_version = "2026-01"
   topics = ["products/create", "products/update"]
   uri = "/webhooks/products-update"
 
-  # NOTE: GDPR webhooks (customers/data_request, customers/redact, shop/redact) are NOT
-  # configured here. Shopify requires setting those URLs manually in the Partner Dashboard:
-  # App → Configuration → Privacy/GDPR → Customer data request / Customer data erasure /
-  # Shop data erasure. The handler routes exist at /webhooks/customers-data-request,
-  # /webhooks/customers-redact, /webhooks/shop-redact.
+  # GDPR/privacy compliance webhooks are set via the Partners API (not supported in toml):
+  # customer_data_request → /webhooks/customers-data-request
+  # customer_redact       → /webhooks/customers-redact
+  # shop_redact           → /webhooks/shop-redact
 
 [pos]
 embedded = false
