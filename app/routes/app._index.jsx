@@ -284,7 +284,7 @@ export default function Dashboard() {
                 <Divider />
                 <Banner
                   tone="attention"
-                  title={`${lockedCount} more fix${lockedCount > 1 ? 'es' : ''} available on Starter ($19/mo)`}
+                  title={`${lockedCount} more fix${lockedCount > 1 ? 'es' : ''} available on Starter ($12/mo)`}
                   action={{ content: 'Upgrade to Starter', url: '/app/billing?plan=starter' }}
                 >
                   <p>

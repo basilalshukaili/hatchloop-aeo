@@ -149,7 +149,7 @@ then calls the real Admin GraphQL API.
 | auth.$.jsx — real OAuth callback wired | Done |
 | shopify.app.toml client_id | Done |
 | write_products scope added (needed by descriptions route) | Done 2026-08-12 |
-| Shopify Billing API wired — Starter $19/mo + Pro $79/mo, 7-day trial | Done 2026-08-12 |
+| Shopify Billing API wired — Starter $12/mo + Pro $79/mo, 7-day trial | Done 2026-08-12 (price updated 2026-08-13) |
 | app.descriptions.jsx — AI product description generation | Done |
 | app.billing.jsx action — real billing.request() call | Done 2026-08-12 |
 | render.yaml — Render deployment config | Done 2026-08-12 |
