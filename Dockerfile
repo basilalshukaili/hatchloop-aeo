@@ -6,19 +6,17 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install from lockfile — fast, deterministic, includes devDeps for prisma generate
+# Install from lockfile — includes all deps (devDeps needed for prisma generate)
 RUN npm ci --legacy-peer-deps
 
 # Copy pre-built source (build/ committed — skips remix build on Render)
 COPY . .
 
-# Generate Prisma client for the target platform
+# Generate Prisma client for the target platform (Alpine linux-musl)
 RUN npx prisma generate
 
-# Prune devDependencies for smaller runtime image (prisma CLI is in deps, stays)
-RUN npm prune --production
+# Render Docker web services default to PORT=10000
+EXPOSE 10000
 
-EXPOSE 3000
-
-# Run DB migrations on start, then serve
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+# Run DB migrations (best-effort) then serve; ; not && so server starts even if migrate errors
+CMD ["sh", "-c", "npx prisma migrate deploy; npm run start"]
