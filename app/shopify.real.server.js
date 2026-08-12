@@ -41,7 +41,7 @@ const shopify = shopifyApp({
   isEmbeddedApp: true,
   billing: {
     [BILLING_PLANS.starter]: {
-      amount: 19,
+      amount: 12,
       currencyCode: 'USD',
       interval: BillingInterval.Every30Days,
       trialDays: 7,
