@@ -147,14 +147,14 @@ then calls the real Admin GraphQL API.
 | render.yaml — Render deployment config | Done 2026-08-12 |
 | Privacy policy page | Done (hatchloop.dev/privacy/ — HTTP 200) |
 | GitHub repo created (public) | Done 2026-08-12 — github.com/basilalshukaili/hatchloop-aeo |
-| Render service created (free plan) | Done 2026-08-12 — srv-d9ubp1u5djic739ken00 |
+| Render service created (free plan, Node runtime) | Done 2026-08-12 — srv-d9ucej61egvs73e6bc9g |
 | All env vars set on Render | Done 2026-08-12 — NODE_ENV, AUTH_MODE=shopify, SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_APP_URL, DEEPSEEK_API_KEY, DATABASE_URL |
 | AI descriptions switched to DeepSeek | Done 2026-08-12 — DEEPSEEK_API_KEY, no Anthropic SDK needed |
 | shopify.app.toml redirect_urls | Done 2026-08-12 — hatchloop-aeo.onrender.com |
-| Production deployment build | IN PROGRESS — dep-d9ubqpu5djic739kj6t0, build_in_progress |
-| Partner Dashboard URLs updated | Pending — CEO will do via Shopify CLI (no founder action) |
-| OAuth test install on dev store | Pending |
-| DB migrated | Pending (auto-runs on Render start via `npx prisma migrate deploy`) |
-| Production deployment | Pending (HITL gate — founder approval before deploy) |
+| Root crash fix: @shopify/polaris ESM JSON imports | Done 2026-08-12 — serverDependenciesToBundle bundles polaris |
+| Production deployment LIVE | **Done 2026-08-12** — https://hatchloop-aeo.onrender.com HTTP 200 |
+| DB migrated | Done (auto-ran via `npx prisma migrate deploy` on first start) |
+| Partner Dashboard URLs updated | **HITL REQUIRED** — founder must set App URL + redirect URLs in Partner Dashboard web UI (3 fields). Cannot be done via Partner API token. |
+| OAuth test install on dev store | Pending — after founder sets Dashboard URLs |
 | App listing content | Pending |
 | App Review submission | Pending (allow 5–10 business days) |
