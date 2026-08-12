@@ -44,18 +44,11 @@ api_version = "2026-01"
   topics = ["products/create", "products/update"]
   uri = "/webhooks/products-update"
 
-  # GDPR — required by Shopify App Store Review
-  [[webhooks.subscriptions]]
-  topics = ["customers/data_request"]
-  uri = "/webhooks/customers-data-request"
-
-  [[webhooks.subscriptions]]
-  topics = ["customers/redact"]
-  uri = "/webhooks/customers-redact"
-
-  [[webhooks.subscriptions]]
-  topics = ["shop/redact"]
-  uri = "/webhooks/shop-redact"
+  # NOTE: GDPR webhooks (customers/data_request, customers/redact, shop/redact) are NOT
+  # configured here. Shopify requires setting those URLs manually in the Partner Dashboard:
+  # App → Configuration → Privacy/GDPR → Customer data request / Customer data erasure /
+  # Shop data erasure. The handler routes exist at /webhooks/customers-data-request,
+  # /webhooks/customers-redact, /webhooks/shop-redact.
 
 [pos]
 embedded = false
