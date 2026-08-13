@@ -4522,8 +4522,8 @@ function classNames(...classes) {
 function variationName(name, value) {
   return `${name}${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
-function sanitizeCustomProperties(styles42) {
-  let nonNullValues = Object.entries(styles42).filter(([_, value]) => value != null);
+function sanitizeCustomProperties(styles43) {
+  let nonNullValues = Object.entries(styles43).filter(([_, value]) => value != null);
   return nonNullValues.length ? Object.fromEntries(nonNullValues) : void 0;
 }
 function getResponsiveProps(componentName, componentProp, tokenSubgroup, responsiveProp) {
@@ -6029,7 +6029,7 @@ function buttonFrom({
   onAction,
   plain,
   destructive,
-  ...action9
+  ...action11
 }, overrides, key) {
   let plainVariant = plain ? "plain" : void 0, destructiveVariant = destructive ? "primary" : void 0, tone = !overrides?.tone && destructive ? "critical" : overrides?.tone;
   return /* @__PURE__ */ React31.createElement(Button, Object.assign({
@@ -6037,7 +6037,7 @@ function buttonFrom({
     onClick: onAction,
     tone,
     variant: plainVariant || destructiveVariant
-  }, action9, overrides), content);
+  }, action11, overrides), content);
 }
 
 // node_modules/@shopify/polaris/build/esm/components/Card/Card.js
@@ -7558,7 +7558,7 @@ function Labelled({
   id,
   label,
   error,
-  action: action9,
+  action: action11,
   helpText,
   children,
   labelHidden,
@@ -7567,9 +7567,9 @@ function Labelled({
   readOnly,
   ...rest
 }) {
-  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action9 ? /* @__PURE__ */ React52.createElement("div", {
+  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action11 ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.Action
-  }, buttonFrom(action9, {
+  }, buttonFrom(action11, {
     variant: "plain"
   })) : null, helpTextMarkup = helpText ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.HelpText,
@@ -8654,12 +8654,12 @@ function ActionsMeasurer({
   useEffect13(() => {
     handleMeasurement();
   }, [handleMeasurement, actions, groups]);
-  let actionsMarkup = actions.map((action9) => {
+  let actionsMarkup = actions.map((action11) => {
     let {
       content,
       onAction,
       ...rest
-    } = action9;
+    } = action11;
     return /* @__PURE__ */ React66.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8729,12 +8729,12 @@ function Actions({
       hasMeasured: containerWidth !== 1 / 0
     });
   }, [containerWidth, disclosureWidth, actions, groups, actionsWidths, setState]);
-  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action9) => {
+  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action11) => {
     let {
       content,
       onAction,
       ...rest
-    } = action9;
+    } = action11;
     return /* @__PURE__ */ React67.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8742,18 +8742,18 @@ function Actions({
   }), filteredGroups = (hiddenGroups.length > 0 || hiddenActions.length > 0 ? [...groupsOrDefault, defaultRollupGroup] : [...groupsOrDefault]).filter((group, index) => {
     let hasNoGroupsProp = groupsOrDefault.length === 0, isVisibleGroup = visibleGroups.includes(index), isDefaultGroup = group === defaultRollupGroup;
     return hasNoGroupsProp ? hiddenActions.length > 0 : isDefaultGroup ? !0 : isVisibleGroup;
-  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action9) => action9 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
+  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action11) => action11 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
     let {
       title,
       actions: groupActions,
       ...rest
-    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action9) => (isMenuGroup(action9) ? sections.push({
-      title: action9.title,
-      items: action9.actions.map((sectionAction) => ({
+    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action11) => (isMenuGroup(action11) ? sections.push({
+      title: action11.title,
+      items: action11.actions.map((sectionAction) => ({
         ...sectionAction,
-        disabled: action9.disabled || sectionAction.disabled
+        disabled: action11.disabled || sectionAction.disabled
       }))
-    }) : actions2.push(action9), [actions2, sections]), [[], []]);
+    }) : actions2.push(action11), [actions2, sections]), [[], []]);
     return isDefaultGroup ? /* @__PURE__ */ React67.createElement(MenuGroup, Object.assign({
       key: title,
       title,
@@ -8845,9 +8845,9 @@ function convertGroupToSection({
 }) {
   return {
     title,
-    items: actions.map((action9) => ({
-      ...action9,
-      disabled: disabled || action9.disabled
+    items: actions.map((action11) => ({
+      ...action11,
+      disabled: disabled || action11.disabled
     }))
   };
 }
@@ -9038,7 +9038,7 @@ function BannerLayout({
   icon,
   hideIcon,
   onDismiss,
-  action: action9,
+  action: action11,
   secondaryAction,
   title,
   children
@@ -9056,9 +9056,9 @@ function BannerLayout({
     }, /* @__PURE__ */ React71.createElement(Icon, {
       source: icon ?? bannerAttributes[bannerTone].icon
     })),
-    actionButtons: action9 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action9 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
-      onClick: action9.onAction
-    }, action9), action9.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+    actionButtons: action11 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action11 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+      onClick: action11.onAction
+    }, action11), action11.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
       onClick: secondaryAction.onAction
     }, secondaryAction), secondaryAction.content)) : null,
     dismissButton: onDismiss ? /* @__PURE__ */ React71.createElement(Button, {
@@ -10230,7 +10230,7 @@ function EmptyState({
   largeImage,
   imageContained,
   fullWidth = !1,
-  action: action9,
+  action: action11,
   secondaryAction,
   footerContent
 }) {
@@ -10266,7 +10266,7 @@ function EmptyState({
     as: "span",
     alignment: "center",
     variant: "bodySm"
-  }, footerContent)) : null, primaryActionMarkup = action9 ? buttonFrom(action9, {
+  }, footerContent)) : null, primaryActionMarkup = action11 ? buttonFrom(action11, {
     variant: "primary",
     size: "medium"
   }) : null, headingMarkup = heading ? /* @__PURE__ */ React81.createElement(Box, {
@@ -10682,18 +10682,18 @@ function PrimaryActionMarkup({
     printHidden: !0
   }, actionMarkup));
 }
-function shouldShowIconOnly(isMobile, action9) {
+function shouldShowIconOnly(isMobile, action11) {
   let {
     content,
     accessibilityLabel
-  } = action9, {
+  } = action11, {
     icon
-  } = action9;
+  } = action11;
   return icon == null ? {
-    ...action9,
+    ...action11,
     icon: void 0
   } : (isMobile && (accessibilityLabel = accessibilityLabel || content, content = void 0), {
-    ...action9,
+    ...action11,
     content,
     accessibilityLabel,
     icon
@@ -10836,6 +10836,175 @@ function ProgressBar({
 function parseProgress(progress, warningMessage) {
   let progressWidth;
   return progress < 0 ? progressWidth = 0 : progress > 100 ? progressWidth = 100 : progressWidth = progress, progressWidth;
+}
+
+// node_modules/@shopify/polaris/build/esm/components/Select/Select.js
+import React92, { useId as useId6, useCallback as useCallback18 } from "react";
+
+// node_modules/@shopify/polaris/build/esm/components/Select/Select.css.js
+var styles42 = {
+  Select: "Polaris-Select",
+  disabled: "Polaris-Select--disabled",
+  error: "Polaris-Select--error",
+  Backdrop: "Polaris-Select__Backdrop",
+  Input: "Polaris-Select__Input",
+  Content: "Polaris-Select__Content",
+  InlineLabel: "Polaris-Select__InlineLabel",
+  Icon: "Polaris-Select__Icon",
+  SelectedOption: "Polaris-Select__SelectedOption",
+  Prefix: "Polaris-Select__Prefix",
+  hover: "Polaris-Select--hover",
+  toneMagic: "Polaris-Select--toneMagic"
+};
+
+// node_modules/@shopify/polaris/build/esm/components/Select/Select.js
+var PLACEHOLDER_VALUE = "";
+function Select({
+  options: optionsProp,
+  label,
+  labelAction,
+  labelHidden: labelHiddenProp,
+  labelInline,
+  disabled,
+  helpText,
+  placeholder,
+  id: idProp,
+  name,
+  value = PLACEHOLDER_VALUE,
+  error,
+  onChange,
+  onFocus,
+  onBlur,
+  requiredIndicator,
+  tone
+}) {
+  let {
+    value: focused,
+    toggle: toggleFocused
+  } = useToggle(!1), uniqId = useId6(), id = idProp ?? uniqId, labelHidden = labelInline ? !0 : labelHiddenProp, className = classNames(styles42.Select, error && styles42.error, tone && styles42[variationName("tone", tone)], disabled && styles42.disabled), handleFocus = useCallback18((event) => {
+    toggleFocused(), onFocus?.(event);
+  }, [onFocus, toggleFocused]), handleBlur = useCallback18((event) => {
+    toggleFocused(), onBlur?.(event);
+  }, [onBlur, toggleFocused]), handleChange = onChange ? (event) => onChange(event.currentTarget.value, id) : void 0, describedBy = [];
+  helpText && describedBy.push(helpTextID(id)), error && describedBy.push(`${id}Error`);
+  let normalizedOptions = (optionsProp || []).map(normalizeOption);
+  placeholder && (normalizedOptions = [{
+    label: placeholder,
+    value: PLACEHOLDER_VALUE,
+    disabled: !0
+  }, ...normalizedOptions]);
+  let inlineLabelMarkup = labelInline && /* @__PURE__ */ React92.createElement(Box, {
+    paddingInlineEnd: "100"
+  }, /* @__PURE__ */ React92.createElement(Text, {
+    as: "span",
+    variant: "bodyMd",
+    tone: tone && tone === "magic" && !focused ? "magic-subdued" : "subdued",
+    truncate: !0
+  }, label)), selectedOption = getSelectedOption(normalizedOptions, value), prefixMarkup = selectedOption.prefix && /* @__PURE__ */ React92.createElement("div", {
+    className: styles42.Prefix
+  }, selectedOption.prefix), contentMarkup = /* @__PURE__ */ React92.createElement("div", {
+    className: styles42.Content,
+    "aria-hidden": !0,
+    "aria-disabled": disabled
+  }, inlineLabelMarkup, prefixMarkup, /* @__PURE__ */ React92.createElement("span", {
+    className: styles42.SelectedOption
+  }, selectedOption.label), /* @__PURE__ */ React92.createElement("span", {
+    className: styles42.Icon
+  }, /* @__PURE__ */ React92.createElement(Icon, {
+    source: SvgSelectIcon
+  }))), optionsMarkup = normalizedOptions.map(renderOption);
+  return /* @__PURE__ */ React92.createElement(Labelled, {
+    id,
+    label,
+    error,
+    action: labelAction,
+    labelHidden,
+    helpText,
+    requiredIndicator,
+    disabled
+  }, /* @__PURE__ */ React92.createElement("div", {
+    className
+  }, /* @__PURE__ */ React92.createElement("select", {
+    id,
+    name,
+    value,
+    className: styles42.Input,
+    disabled,
+    onFocus: handleFocus,
+    onBlur: handleBlur,
+    onChange: handleChange,
+    "aria-invalid": Boolean(error),
+    "aria-describedby": describedBy.length ? describedBy.join(" ") : void 0,
+    "aria-required": requiredIndicator
+  }, optionsMarkup), contentMarkup, /* @__PURE__ */ React92.createElement("div", {
+    className: styles42.Backdrop
+  })));
+}
+function isString(option) {
+  return typeof option == "string";
+}
+function isGroup(option) {
+  return typeof option == "object" && "options" in option && option.options != null;
+}
+function normalizeStringOption(option) {
+  return {
+    label: option,
+    value: option
+  };
+}
+function normalizeOption(option) {
+  if (isString(option))
+    return normalizeStringOption(option);
+  if (isGroup(option)) {
+    let {
+      title,
+      options
+    } = option;
+    return {
+      title,
+      options: options.map((option2) => isString(option2) ? normalizeStringOption(option2) : option2)
+    };
+  }
+  return option;
+}
+function getSelectedOption(options, value) {
+  let flatOptions = flattenOptions(options), selectedOption = flatOptions.find((option) => value === option.value);
+  return selectedOption === void 0 && (selectedOption = flatOptions.find((option) => !option.hidden)), selectedOption || {
+    value: "",
+    label: ""
+  };
+}
+function flattenOptions(options) {
+  let flatOptions = [];
+  return options.forEach((optionOrGroup) => {
+    isGroup(optionOrGroup) ? flatOptions = flatOptions.concat(optionOrGroup.options) : flatOptions.push(optionOrGroup);
+  }), flatOptions;
+}
+function renderSingleOption(option) {
+  let {
+    value,
+    label,
+    prefix: _prefix,
+    key,
+    ...rest
+  } = option;
+  return /* @__PURE__ */ React92.createElement("option", Object.assign({
+    key: key ?? value,
+    value
+  }, rest), label);
+}
+function renderOption(optionOrGroup) {
+  if (isGroup(optionOrGroup)) {
+    let {
+      title,
+      options
+    } = optionOrGroup;
+    return /* @__PURE__ */ React92.createElement("optgroup", {
+      label: title,
+      key: title
+    }, options.map(renderSingleOption));
+  }
+  return renderSingleOption(optionOrGroup);
 }
 
 // node_modules/@shopify/polaris/locales/en.json
@@ -11270,6 +11439,16 @@ async function authenticateAdmin(request) {
     } };
   let { authenticate: authenticate2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports));
   return authenticate2.admin(request);
+}
+async function authenticateAppProxy(request) {
+  if (IS_MOCK)
+    return { session: MOCK_SESSION, admin: {
+      graphql: async () => {
+        throw new Error("MOCK_ADMIN_GRAPHQL: app proxy admin unavailable in mock mode.");
+      }
+    } };
+  let { authenticate: authenticate2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports));
+  return authenticate2.public.appProxy(request);
 }
 function getShopFromRequest(request) {
   return IS_MOCK ? MOCK_SESSION.shop : new URL(request.url).searchParams.get("shop") || MOCK_SESSION.shop;
@@ -11962,17 +12141,589 @@ function BillingPage() {
   ] }) });
 }
 
-// app/routes/app._index.jsx
-var app_index_exports = {};
-__export(app_index_exports, {
+// app/routes/app.schema.jsx
+var app_schema_exports = {};
+__export(app_schema_exports, {
   action: () => action8,
-  default: () => Dashboard,
+  default: () => SchemaPage,
   loader: () => loader5
 });
 import { json as json10 } from "@remix-run/node";
-import { useLoaderData as useLoaderData5, useNavigation as useNavigation2, Form as Form2 } from "@remix-run/react";
-import { Fragment as Fragment2, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { useLoaderData as useLoaderData5, useNavigation as useNavigation2, useActionData, Form as Form2 } from "@remix-run/react";
+import { useCallback as useCallback19, useState as useState17 } from "react";
+
+// app/engine/catalog.server.js
+var CATALOG_QUERY = `
+  query HatchloopCatalog($first: Int!) {
+    shop {
+      name
+      description
+      myshopifyDomain
+      primaryDomain { url host }
+      contactEmail
+      currencyCode
+    }
+    products(first: $first, sortKey: UPDATED_AT, reverse: true, query: "status:active") {
+      nodes {
+        id
+        title
+        handle
+        onlineStoreUrl
+        description
+        descriptionHtml
+        productType
+        vendor
+        tags
+        totalInventory
+        seo { title description }
+        featuredMedia { preview { image { url altText } } }
+        priceRangeV2 {
+          minVariantPrice { amount currencyCode }
+          maxVariantPrice { amount currencyCode }
+        }
+        variants(first: 1) { nodes { sku barcode price availableForSale } }
+      }
+    }
+    collections(first: 50, sortKey: UPDATED_AT, reverse: true, query: "published_status:published") {
+      nodes { id title handle description productsCount { count } }
+    }
+  }
+`;
+var MOCK_CATALOG = {
+  shop: {
+    name: "Northwind Outfitters",
+    description: "Independent outdoor gear shop for trail runners and hikers. Tested-in-the-field packs, shoes, and layers.",
+    primaryDomainUrl: "https://northwind-outfitters.example.com",
+    currencyCode: "USD",
+    contactEmail: "hello@northwind-outfitters.example.com"
+  },
+  products: [
+    {
+      id: "gid://shopify/Product/1",
+      title: "Summit Trail Running Shoes",
+      handle: "summit-trail-running-shoes",
+      onlineStoreUrl: null,
+      description: "Lightweight trail runners with a grippy Vibram outsole and a breathable knit upper for long days on technical terrain.",
+      seo: { description: "Lightweight trail running shoes with Vibram grip and a breathable knit upper for technical terrain." },
+      vendor: "Northwind",
+      productType: "Shoes",
+      tags: ["trail", "running"],
+      totalInventory: 42,
+      featuredMedia: { preview: { image: { url: "https://cdn.example.com/summit.jpg", altText: "Summit trail running shoe" } } },
+      priceRangeV2: { minVariantPrice: { amount: "129.00", currencyCode: "USD" }, maxVariantPrice: { amount: "129.00", currencyCode: "USD" } },
+      variants: { nodes: [{ sku: "SUM-TR-01", barcode: "0850001234567", price: "129.00", availableForSale: !0 }] }
+    },
+    {
+      id: "gid://shopify/Product/2",
+      title: "Ridgeline 40L Pack",
+      handle: "ridgeline-40l-pack",
+      onlineStoreUrl: null,
+      description: "A 40-litre fast-hiking pack with a floating lid, dual ice-axe loops, and a ventilated back panel.",
+      seo: { description: "" },
+      vendor: "Northwind",
+      productType: "Packs",
+      tags: ["backpack"],
+      totalInventory: 12,
+      featuredMedia: { preview: { image: { url: "https://cdn.example.com/ridgeline.jpg", altText: "Ridgeline 40L pack" } } },
+      priceRangeV2: { minVariantPrice: { amount: "189.00", currencyCode: "USD" }, maxVariantPrice: { amount: "189.00", currencyCode: "USD" } },
+      variants: { nodes: [{ sku: "RDG-40", barcode: "", price: "189.00", availableForSale: !0 }] }
+    },
+    {
+      id: "gid://shopify/Product/3",
+      title: "Merino Base Layer Crew",
+      handle: "merino-base-layer-crew",
+      onlineStoreUrl: null,
+      description: "",
+      seo: { description: "" },
+      vendor: "Northwind",
+      productType: "Apparel",
+      tags: ["merino"],
+      totalInventory: 0,
+      featuredMedia: null,
+      priceRangeV2: { minVariantPrice: { amount: "78.00", currencyCode: "USD" }, maxVariantPrice: { amount: "78.00", currencyCode: "USD" } },
+      variants: { nodes: [{ sku: "MER-CR", barcode: "", price: "78.00", availableForSale: !1 }] }
+    }
+  ],
+  collections: [
+    { id: "gid://shopify/Collection/1", title: "Trail Running", handle: "trail-running", description: "Shoes, vests, and accessories built for the trail.", productsCount: { count: 18 } },
+    { id: "gid://shopify/Collection/2", title: "Backpacks", handle: "backpacks", description: "Daypacks to multi-day hauls.", productsCount: { count: 9 } }
+  ]
+};
+function normalizeShop(shopNode) {
+  return {
+    name: shopNode?.name || "",
+    description: shopNode?.description || "",
+    primaryDomainUrl: shopNode?.primaryDomain?.url || (shopNode?.myshopifyDomain ? `https://${shopNode.myshopifyDomain}` : ""),
+    host: shopNode?.primaryDomain?.host || shopNode?.myshopifyDomain || "",
+    currencyCode: shopNode?.currencyCode || "",
+    contactEmail: shopNode?.contactEmail || ""
+  };
+}
+async function fetchCatalog({ adminGraphqlFn, productLimit = 100 }) {
+  let first = Math.max(1, Math.min(200, productLimit)), data = await adminGraphqlFn(CATALOG_QUERY, { first });
+  return {
+    shop: normalizeShop(data?.shop),
+    products: (data?.products?.nodes || []).filter(Boolean),
+    collections: (data?.collections?.nodes || []).filter(Boolean)
+  };
+}
+function mockCatalog() {
+  return {
+    shop: { ...MOCK_CATALOG.shop },
+    products: MOCK_CATALOG.products.map((p) => ({ ...p })),
+    collections: MOCK_CATALOG.collections.map((c) => ({ ...c }))
+  };
+}
+
+// app/engine/schema.server.js
+function stripHtml2(s) {
+  return String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+}
+function trimSlash(u) {
+  return String(u || "").replace(/\/+$/, "");
+}
+var SNIPPET_FILENAME = "snippets/hatchloop-aeo-schema.liquid", RENDER_TAG = "{% render 'hatchloop-aeo-schema' %}", RENDER_MARKER = "hatchloop-aeo-schema";
+function buildSchemaLiquidSnippet() {
+  return `{% comment %}
+  Hatchloop AEO \u2014 Structured Data (JSON-LD) snippet.
+  Auto-generated. Emits Organization, Product, and BreadcrumbList schema so AI
+  answer engines (ChatGPT, Perplexity, Gemini, Google AI Mode) can read and cite
+  accurate product facts. Safe to remove: delete this file and the
+  {% raw %}{% render 'hatchloop-aeo-schema' %}{% endraw %} line from layout/theme.liquid.
+{% endcomment %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }}
+  {%- if shop.email and shop.email != blank %},
+  "email": {{ shop.email | json }}
+  {%- endif %}
+}
+</script>
+{%- if product %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "description": {{ product.description | strip_html | truncatewords: 60 | json }},
+  "url": "{{ shop.url }}{{ product.url }}",
+  {%- if product.featured_image %}
+  "image": ["{{ product.featured_image | image_url: width: 1200 }}"],
+  {%- endif %}
+  {%- if product.selected_or_first_available_variant.sku != blank %}
+  "sku": {{ product.selected_or_first_available_variant.sku | json }},
+  {%- endif %}
+  {%- if product.selected_or_first_available_variant.barcode != blank %}
+  "gtin": {{ product.selected_or_first_available_variant.barcode | json }},
+  {%- endif %}
+  "brand": { "@type": "Brand", "name": {{ product.vendor | default: shop.name | json }} },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": {{ cart.currency.iso_code | json }},
+    "price": "{{ product.selected_or_first_available_variant.price | money_without_currency | strip_html }}",
+    "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": "{{ shop.url }}{{ product.url }}"
+  }
+  {%- if product.metafields.reviews.rating.value != blank %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.metafields.reviews.rating.value }}",
+    "reviewCount": "{{ product.metafields.reviews.rating_count }}"
+  }
+  {%- endif %}
+}
+</script>
+{%- endif %}
+{%- if template contains 'product' or template contains 'collection' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": {{ shop.url | json }} }
+    {%- if collection %},
+    { "@type": "ListItem", "position": 2, "name": {{ collection.title | json }}, "item": "{{ shop.url }}{{ collection.url }}" }
+    {%- endif %}
+    {%- if product %},
+    { "@type": "ListItem", "position": {% if collection %}3{% else %}2{% endif %}, "name": {{ product.title | json }}, "item": "{{ shop.url }}{{ product.url }}" }
+    {%- endif %}
+  ]
+}
+</script>
+{%- endif %}
+`;
+}
+function buildOrganizationJsonLd({ shop = {} } = {}) {
+  let url = trimSlash(shop.primaryDomainUrl || shop.url || ""), org = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: shop.name || "Store"
+  };
+  url && (org.url = url);
+  let desc = stripHtml2(shop.description);
+  return desc && (org.description = desc.length > 300 ? desc.slice(0, 300).trim() + "\u2026" : desc), shop.contactEmail && (org.email = shop.contactEmail), org;
+}
+function buildProductJsonLd({ product = {}, shopUrl = "" } = {}) {
+  let base = trimSlash(shopUrl), url = product.onlineStoreUrl || `${base}/products/${product.handle || ""}`, descRaw = stripHtml2(product.seo?.description) || stripHtml2(product.description || product.descriptionHtml), image = product.featuredMedia?.preview?.image?.url || product.featuredImage?.url || product.image?.url || null, variant = product.variants?.nodes?.[0] || null, price = product.priceRangeV2?.minVariantPrice, node = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.title || "Product",
+    url
+  };
+  if (descRaw && (node.description = descRaw.length > 500 ? descRaw.slice(0, 500).trim() + "\u2026" : descRaw), image && (node.image = [image]), variant?.sku && (node.sku = variant.sku), variant?.barcode && (node.gtin = variant.barcode), node.brand = { "@type": "Brand", name: product.vendor || void 0 }, node.brand.name || delete node.brand, price?.amount != null) {
+    let available = variant?.availableForSale === !0 || product.totalInventory != null && Number(product.totalInventory) > 0;
+    node.offers = {
+      "@type": "Offer",
+      priceCurrency: price.currencyCode || void 0,
+      price: Number(price.amount).toFixed(2),
+      availability: available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url
+    }, node.offers.priceCurrency || delete node.offers.priceCurrency;
+  }
+  return node;
+}
+function schemaCoverageSummary({ shop, products = [] }) {
+  let org = buildOrganizationJsonLd({ shop }), withPrice = products.filter((p) => p.priceRangeV2?.minVariantPrice?.amount != null).length, withImage = products.filter(
+    (p) => p.featuredMedia?.preview?.image?.url || p.featuredImage?.url
+  ).length, withGtin = products.filter((p) => p.variants?.nodes?.[0]?.barcode).length;
+  return {
+    hasOrgUrl: !!org.url,
+    hasOrgEmail: !!org.email,
+    sampled: products.length,
+    withPrice,
+    withImage,
+    withGtin,
+    pricePct: products.length ? Math.round(withPrice / products.length * 100) : 0,
+    imagePct: products.length ? Math.round(withImage / products.length * 100) : 0,
+    gtinPct: products.length ? Math.round(withGtin / products.length * 100) : 0
+  };
+}
+
+// app/routes/app.schema.jsx
+import { jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+var SAMPLE_PRODUCTS = 12, THEMES_QUERY = `
+  query HatchloopThemes { themes(first: 50) { nodes { id name role } } }`, THEME_FILE_QUERY = `
+  query HatchloopThemeFile($themeId: ID!) {
+    theme(id: $themeId) {
+      id name role
+      files(filenames: ["layout/theme.liquid"], first: 1) {
+        nodes { filename body { ... on OnlineStoreThemeFileBodyText { content } } }
+      }
+    }
+  }`, UPSERT_MUTATION = `
+  mutation HatchloopUpsert($themeId: ID!, $files: [OnlineStoreThemeFilesUpsertFileInput!]!) {
+    themeFilesUpsert(themeId: $themeId, files: $files) {
+      upsertedThemeFiles { filename }
+      userErrors { field message }
+    }
+  }`;
 async function loader5({ request }) {
+  let shop, admin = null;
+  if (IS_MOCK)
+    shop = getShopFromRequest(request);
+  else {
+    let auth = await authenticateAdmin(request);
+    admin = auth.admin, shop = auth.session.shop;
+  }
+  let catalog, themes2 = [], fetchError = null;
+  if (IS_MOCK)
+    catalog = mockCatalog(), themes2 = [
+      { id: "gid://shopify/OnlineStoreTheme/1", name: "Dawn (live)", role: "MAIN" },
+      { id: "gid://shopify/OnlineStoreTheme/2", name: "Dawn copy", role: "UNPUBLISHED" }
+    ];
+  else {
+    let adminGraphqlFn = async (query, variables) => {
+      let body = await (await admin.graphql(query, { variables })).json();
+      if (body.errors)
+        throw new Error(body.errors.map((e) => e.message).join("; "));
+      return body.data;
+    };
+    try {
+      catalog = await fetchCatalog({ adminGraphqlFn, productLimit: SAMPLE_PRODUCTS });
+    } catch (e) {
+      fetchError = e.message, catalog = { shop: { name: shop, primaryDomainUrl: `https://${shop}` }, products: [], collections: [] };
+    }
+    try {
+      themes2 = ((await adminGraphqlFn(THEMES_QUERY, {}))?.themes?.nodes || []).filter(Boolean);
+    } catch {
+      themes2 = [];
+    }
+  }
+  let shopUrl = catalog.shop.primaryDomainUrl || `https://${shop}`, org = buildOrganizationJsonLd({ shop: catalog.shop }), sample = catalog.products.find((p) => p.priceRangeV2?.minVariantPrice?.amount != null) || catalog.products[0] || null, product = sample ? buildProductJsonLd({ product: sample, shopUrl }) : null, coverage = schemaCoverageSummary({ shop: catalog.shop, products: catalog.products }), installable = themes2.filter((t) => t.role === "UNPUBLISHED");
+  return json10({
+    isMock: IS_MOCK,
+    fetchError,
+    orgJson: JSON.stringify(org, null, 2),
+    productJson: product ? JSON.stringify(product, null, 2) : null,
+    sampleTitle: sample ? sample.title : null,
+    coverage,
+    snippet: buildSchemaLiquidSnippet(),
+    snippetFilename: SNIPPET_FILENAME,
+    renderTag: RENDER_TAG,
+    themes: themes2,
+    installable,
+    hasUnpublished: installable.length > 0
+  });
+}
+async function action8({ request }) {
+  let themeId = (await request.formData()).get("themeId");
+  if (IS_MOCK)
+    return json10({
+      ok: !0,
+      mock: !0,
+      themeName: "Dawn copy",
+      wroteSnippet: !0,
+      wiredHead: !0,
+      message: "MOCK: snippet write simulated. Install on a real store to write to a theme."
+    });
+  let admin = (await authenticateAdmin(request)).admin, adminGraphqlFn = async (query, variables) => {
+    let body = await (await admin.graphql(query, { variables })).json();
+    if (body.errors)
+      throw new Error(body.errors.map((e) => e.message).join("; "));
+    return body.data;
+  }, target = null;
+  try {
+    let themes2 = ((await adminGraphqlFn(THEMES_QUERY, {}))?.themes?.nodes || []).filter(Boolean);
+    target = themes2.find((t) => t.id === themeId) || null, target || (target = themes2.find((t) => t.role === "UNPUBLISHED") || null);
+  } catch (e) {
+    return json10({ ok: !1, error: `Could not list themes: ${e.message}` }, { status: 500 });
+  }
+  if (!target)
+    return json10({
+      ok: !1,
+      noUnpublished: !0,
+      error: "No unpublished theme found. Duplicate your live theme (Online Store \u2192 Themes \u2192 Actions \u2192 Duplicate) and try again \u2014 live-theme writes are intentionally blocked for safety."
+    }, { status: 400 });
+  if (target.role === "MAIN")
+    return json10({
+      ok: !1,
+      error: "Refusing to write to the live (MAIN) theme. Pick an unpublished theme."
+    }, { status: 400 });
+  let snippet = buildSchemaLiquidSnippet();
+  try {
+    let errs = (await adminGraphqlFn(UPSERT_MUTATION, {
+      themeId: target.id,
+      files: [{ filename: SNIPPET_FILENAME, body: { type: "TEXT", value: snippet } }]
+    }))?.themeFilesUpsert?.userErrors || [];
+    if (errs.length)
+      return json10({ ok: !1, error: errs.map((e) => e.message).join("; ") }, { status: 400 });
+  } catch (e) {
+    let msg = String(e.message || ""), needsExemption = /exemption|access denied|not approved|protected customer|unauthorized|scope/i.test(msg);
+    return json10({
+      ok: !1,
+      needsExemption,
+      error: needsExemption ? "Shopify requires a theme-access exemption to write theme files with the Admin API. Meanwhile, use the copy-paste snippet below, or enable the bundled Theme App Extension block (no exemption needed)." : `Snippet write failed: ${msg}`
+    }, { status: 400 });
+  }
+  let wiredHead = !1, headNote = null;
+  try {
+    let content = (await adminGraphqlFn(THEME_FILE_QUERY, { themeId: target.id }))?.theme?.files?.nodes?.[0]?.body?.content;
+    if (typeof content == "string" && content.length)
+      if (content.includes(RENDER_MARKER))
+        wiredHead = !0;
+      else {
+        let idx = content.search(/<\/head>/i);
+        if (idx !== -1) {
+          let updated = content.slice(0, idx) + `  ${RENDER_TAG}
+` + content.slice(idx), errs2 = (await adminGraphqlFn(UPSERT_MUTATION, {
+            themeId: target.id,
+            files: [{ filename: "layout/theme.liquid", body: { type: "TEXT", value: updated } }]
+          }))?.themeFilesUpsert?.userErrors || [];
+          errs2.length ? headNote = errs2.map((e) => e.message).join("; ") : wiredHead = !0;
+        } else
+          headNote = "Could not find </head> in layout/theme.liquid \u2014 add {% render 'hatchloop-aeo-schema' %} to your head manually.";
+      }
+    else
+      headNote = "Snippet written, but layout/theme.liquid could not be read to auto-include it.";
+  } catch (e) {
+    headNote = `Snippet written; auto-include skipped: ${e.message}`;
+  }
+  return json10({
+    ok: !0,
+    themeName: target.name,
+    themeRole: target.role,
+    wroteSnippet: !0,
+    wiredHead,
+    headNote
+  });
+}
+function JsonBlock({ title, value, badge }) {
+  let [copied, setCopied] = useState17(!1), copy = useCallback19(() => {
+    typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(value).then(() => {
+      setCopied(!0), setTimeout(() => setCopied(!1), 1600);
+    });
+  }, [value]);
+  return /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+    /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", blockAlign: "center", children: [
+      /* @__PURE__ */ jsxs5(InlineStack, { gap: "200", blockAlign: "center", children: [
+        /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: title }),
+        badge
+      ] }),
+      /* @__PURE__ */ jsx6(Button, { onClick: copy, size: "slim", children: copied ? "Copied \u2713" : "Copy JSON" })
+    ] }),
+    /* @__PURE__ */ jsx6(Box, { background: "bg-surface-secondary", borderRadius: "200", padding: "300", overflowX: "scroll", children: /* @__PURE__ */ jsx6("pre", { style: {
+      margin: 0,
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+      fontSize: "12px",
+      lineHeight: 1.5,
+      whiteSpace: "pre",
+      maxHeight: "360px",
+      overflow: "auto"
+    }, children: value }) })
+  ] }) });
+}
+function SchemaPage() {
+  let {
+    isMock,
+    fetchError,
+    orgJson,
+    productJson,
+    sampleTitle,
+    coverage,
+    snippet,
+    snippetFilename,
+    renderTag,
+    installable,
+    hasUnpublished
+  } = useLoaderData5(), actionData = useActionData(), nav = useNavigation2(), installing = nav.state !== "idle" && nav.formData?.get("intent") === "install", [themeId, setThemeId] = useState17(installable[0]?.id || ""), [snippetCopied, setSnippetCopied] = useState17(!1), copySnippet = useCallback19(() => {
+    typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(snippet).then(() => {
+      setSnippetCopied(!0), setTimeout(() => setSnippetCopied(!1), 1600);
+    });
+  }, [snippet]), themeOptions = installable.map((t) => ({ label: `${t.name} (unpublished)`, value: t.id }));
+  return /* @__PURE__ */ jsx6(
+    Page,
+    {
+      title: "Structured Data \u2014 JSON-LD",
+      subtitle: "Organization + Product schema so AI engines and Google read accurate facts about your store",
+      backAction: { content: "Dashboard", url: "/app" },
+      children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "400", children: [
+        isMock && /* @__PURE__ */ jsx6(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsx6("p", { children: "Preview is built from a stub catalog and the install writes nothing. On a real store this reads your shop + products and can write the snippet to an unpublished theme." }) }),
+        fetchError && /* @__PURE__ */ jsx6(Banner, { tone: "critical", title: "Could not read the catalog", children: /* @__PURE__ */ jsx6("p", { children: fetchError }) }),
+        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Why structured data lifts AI visibility" }),
+          /* @__PURE__ */ jsx6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: "Answer engines (ChatGPT, Perplexity, Gemini, Google AI Mode) lift price, availability, brand and images straight from JSON-LD. Products without it get guessed at \u2014 or skipped. Here is your current coverage across the sampled catalog:" }),
+          /* @__PURE__ */ jsxs5(InlineStack, { gap: "200", wrap: !0, children: [
+            /* @__PURE__ */ jsx6(Badge, { tone: coverage.hasOrgUrl ? "success" : "critical", children: coverage.hasOrgUrl ? "Organization URL set" : "No Organization URL" }),
+            /* @__PURE__ */ jsx6(Badge, { tone: coverage.pricePct >= 80 ? "success" : "warning", children: `Price data: ${coverage.pricePct}%` }),
+            /* @__PURE__ */ jsx6(Badge, { tone: coverage.imagePct >= 80 ? "success" : "warning", children: `Product image: ${coverage.imagePct}%` }),
+            /* @__PURE__ */ jsx6(Badge, { tone: coverage.gtinPct >= 60 ? "success" : "attention", children: `GTIN/barcode: ${coverage.gtinPct}%` }),
+            /* @__PURE__ */ jsx6(Badge, { children: `${coverage.sampled} products sampled` })
+          ] })
+        ] }) }),
+        /* @__PURE__ */ jsx6(
+          JsonBlock,
+          {
+            title: "Organization schema",
+            value: orgJson,
+            badge: /* @__PURE__ */ jsx6(Badge, { tone: "info", children: "every page" })
+          }
+        ),
+        productJson ? /* @__PURE__ */ jsx6(
+          JsonBlock,
+          {
+            title: `Product schema${sampleTitle ? ` \u2014 ${sampleTitle}` : ""}`,
+            value: productJson,
+            badge: /* @__PURE__ */ jsx6(Badge, { tone: "info", children: "product pages" })
+          }
+        ) : /* @__PURE__ */ jsx6(Banner, { tone: "attention", title: "No products to sample", children: /* @__PURE__ */ jsx6("p", { children: "Add an active product to preview Product JSON-LD." }) }),
+        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Install to your storefront" }),
+          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Writes a dynamic Liquid snippet (",
+            /* @__PURE__ */ jsx6("code", { children: snippetFilename }),
+            ") to an",
+            " ",
+            /* @__PURE__ */ jsx6("strong", { children: "unpublished" }),
+            " theme and wires it into the theme's",
+            " ",
+            /* @__PURE__ */ jsx6("code", { children: "<head>" }),
+            ". It renders the right Organization + Product + BreadcrumbList schema on every page. Review it there, then publish the theme when you're happy \u2014 the live theme is never touched by this app."
+          ] }),
+          actionData?.ok && /* @__PURE__ */ jsxs5(Banner, { tone: "success", title: actionData.mock ? "Simulated (mock)" : `Installed to \u201C${actionData.themeName}\u201D`, children: [
+            /* @__PURE__ */ jsxs5("p", { children: [
+              actionData.wroteSnippet && `Snippet written to ${snippetFilename}. `,
+              actionData.wiredHead ? "Auto-included in layout/theme.liquid <head>." : "Add {% render 'hatchloop-aeo-schema' %} into your theme <head> to activate."
+            ] }),
+            actionData.headNote && /* @__PURE__ */ jsx6("p", { children: actionData.headNote }),
+            !actionData.mock && /* @__PURE__ */ jsx6("p", { children: "Preview the unpublished theme, then publish it when ready." })
+          ] }),
+          actionData && actionData.ok === !1 && /* @__PURE__ */ jsx6(
+            Banner,
+            {
+              tone: actionData.needsExemption ? "warning" : "critical",
+              title: actionData.needsExemption ? "Theme write needs a Shopify exemption" : "Install failed",
+              children: /* @__PURE__ */ jsx6("p", { children: actionData.error })
+            }
+          ),
+          hasUnpublished ? /* @__PURE__ */ jsxs5(Form2, { method: "post", children: [
+            /* @__PURE__ */ jsx6("input", { type: "hidden", name: "intent", value: "install" }),
+            /* @__PURE__ */ jsx6("input", { type: "hidden", name: "themeId", value: themeId }),
+            /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+              /* @__PURE__ */ jsx6(
+                Select,
+                {
+                  label: "Target theme (unpublished only)",
+                  options: themeOptions,
+                  value: themeId,
+                  onChange: setThemeId
+                }
+              ),
+              /* @__PURE__ */ jsx6(InlineStack, { children: /* @__PURE__ */ jsx6(Button, { submit: !0, variant: "primary", loading: installing, children: installing ? "Installing\u2026" : "Install snippet to theme" }) })
+            ] })
+          ] }) : /* @__PURE__ */ jsx6(Banner, { tone: "attention", title: "No unpublished theme available", children: /* @__PURE__ */ jsx6("p", { children: "Duplicate your live theme (Online Store \u2192 Themes \u2192 Actions \u2192 Duplicate), then reload this page to install into the copy. Live-theme writes are blocked for safety \u2014 copy the snippet below in the meantime." }) })
+        ] }) }),
+        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", blockAlign: "center", children: [
+            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Snippet (copy-paste fallback)" }),
+            /* @__PURE__ */ jsx6(Button, { onClick: copySnippet, size: "slim", children: snippetCopied ? "Copied \u2713" : "Copy snippet" })
+          ] }),
+          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Prefer to do it by hand? Create ",
+            /* @__PURE__ */ jsx6("code", { children: snippetFilename }),
+            " in your theme and add ",
+            /* @__PURE__ */ jsx6("code", { children: renderTag }),
+            " to ",
+            /* @__PURE__ */ jsx6("code", { children: "layout/theme.liquid" }),
+            " before",
+            " ",
+            /* @__PURE__ */ jsx6("code", { children: "</head>" }),
+            "."
+          ] }),
+          /* @__PURE__ */ jsx6(Box, { background: "bg-surface-secondary", borderRadius: "200", padding: "300", overflowX: "scroll", children: /* @__PURE__ */ jsx6("pre", { style: {
+            margin: 0,
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+            fontSize: "12px",
+            lineHeight: 1.5,
+            whiteSpace: "pre",
+            maxHeight: "320px",
+            overflow: "auto"
+          }, children: snippet }) }),
+          /* @__PURE__ */ jsx6(Divider, {}),
+          /* @__PURE__ */ jsx6(List, { type: "bullet", children: /* @__PURE__ */ jsx6(List.Item, { children: /* @__PURE__ */ jsxs5(Text, { as: "span", variant: "bodySm", children: [
+            "Already using the bundled ",
+            /* @__PURE__ */ jsx6("strong", { children: "Theme App Extension" }),
+            "? That block does the same job with no exemption \u2014 enable it in the theme editor instead."
+          ] }) }) })
+        ] }) })
+      ] })
+    }
+  );
+}
+
+// app/routes/app._index.jsx
+var app_index_exports = {};
+__export(app_index_exports, {
+  action: () => action9,
+  default: () => Dashboard,
+  loader: () => loader6
+});
+import { json as json11 } from "@remix-run/node";
+import { useLoaderData as useLoaderData6, useNavigation as useNavigation3, Form as Form3 } from "@remix-run/react";
+import { Fragment as Fragment2, jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
+async function loader6({ request }) {
   let shop, admin = null;
   if (IS_MOCK)
     shop = getShopFromRequest(request);
@@ -11989,10 +12740,10 @@ async function loader5({ request }) {
   if (tier !== "free" && !IS_MOCK)
     try {
       deepReport = await runAuthenticatedScan({ adminGraphqlFn: async (query, variables) => {
-        let json12 = await (await admin.graphql(query, { variables })).json();
-        if (json12.errors)
-          throw new Error(json12.errors.map((e) => e.message).join("; "));
-        return json12.data;
+        let json14 = await (await admin.graphql(query, { variables })).json();
+        if (json14.errors)
+          throw new Error(json14.errors.map((e) => e.message).join("; "));
+        return json14.data;
       }, publicReport, sample: 100 });
     } catch (e) {
       deepError = e.message;
@@ -12000,7 +12751,7 @@ async function loader5({ request }) {
   else
     tier !== "free" && IS_MOCK && (deepError = "Authenticated scan unavailable in MOCK mode \u2014 install on a real store to enable.");
   let activeReport = deepReport || publicReport, allFixes = activeReport ? activeReport.allFixes || [] : [], { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
-  return json10({
+  return json11({
     shop,
     tier,
     isMock: IS_MOCK,
@@ -12014,8 +12765,8 @@ async function loader5({ request }) {
     analyzedAt: activeReport ? activeReport.analyzedAt : null
   });
 }
-async function action8({ request }) {
-  return json10({ ok: !0 });
+async function action9({ request }) {
+  return json11({ ok: !0 });
 }
 var SCORE_COLOR = (s) => s >= 80 ? "success" : s >= 65 ? "info" : s >= 50 ? "warning" : "critical", GRADE_COLOR = { A: "success", B: "info", C: "attention", D: "warning", F: "critical" }, SUB_SCORE_LABELS = {
   discoverability: { label: "Discoverability", desc: "llms.txt, agents.md, agentic sitemap, robots.txt" },
@@ -12043,14 +12794,14 @@ function Dashboard() {
     targetUrl,
     isDeep,
     analyzedAt
-  } = useLoaderData5(), isScanning = useNavigation2().state !== "idle";
+  } = useLoaderData6(), isScanning = useNavigation3().state !== "idle";
   if (publicError && !report)
-    return /* @__PURE__ */ jsx6(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsxs5(Banner, { tone: "critical", title: "Scan failed", children: [
-      /* @__PURE__ */ jsx6("p", { children: publicError }),
-      /* @__PURE__ */ jsx6("p", { children: "Check that the store URL is reachable and not password-protected." })
+    return /* @__PURE__ */ jsx7(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsxs6(Banner, { tone: "critical", title: "Scan failed", children: [
+      /* @__PURE__ */ jsx7("p", { children: publicError }),
+      /* @__PURE__ */ jsx7("p", { children: "Check that the store URL is reachable and not password-protected." })
     ] }) });
   if (!report)
-    return /* @__PURE__ */ jsx6(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsx6(EmptyState, { heading: "Running your first AEO scan\u2026", image: "", children: /* @__PURE__ */ jsx6(Spinner, {}) }) });
+    return /* @__PURE__ */ jsx7(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsx7(EmptyState, { heading: "Running your first AEO scan\u2026", image: "", children: /* @__PURE__ */ jsx7(Spinner, {}) }) });
   let score = report.score, grade = report.grade, subScores = report.subScores || {}, fixRows = fixes.map((f, i) => [
     `#${i + 1}`,
     CATEGORY_LABELS[f.category] || f.category,
@@ -12058,29 +12809,29 @@ function Dashboard() {
     f.fix,
     f.needsApp ? tier === "free" ? "\u2014 upgrade" : "Available" : "No code needed"
   ]);
-  return /* @__PURE__ */ jsx6(
+  return /* @__PURE__ */ jsx7(
     Page,
     {
       title: "Hatchloop AEO \u2014 AI-Visibility Score",
       subtitle: `${isDeep ? "Deep (authenticated)" : "Public"} scan \xB7 ${targetUrl}${isMock ? " (MOCK demo store)" : ""}`,
-      primaryAction: /* @__PURE__ */ jsx6(Form2, { method: "post", children: /* @__PURE__ */ jsx6(Button, { submit: !0, loading: isScanning, tone: "success", children: isScanning ? "Scanning\u2026" : "Re-scan now" }) }),
-      children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "400", children: [
-        isMock && /* @__PURE__ */ jsx6(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsxs5("p", { children: [
+      primaryAction: /* @__PURE__ */ jsx7(Form3, { method: "post", children: /* @__PURE__ */ jsx7(Button, { submit: !0, loading: isScanning, tone: "success", children: isScanning ? "Scanning\u2026" : "Re-scan now" }) }),
+      children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "400", children: [
+        isMock && /* @__PURE__ */ jsx7(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsxs6("p", { children: [
           "Auth is mocked. The public scan is real (fetching ",
-          /* @__PURE__ */ jsx6("strong", { children: targetUrl }),
+          /* @__PURE__ */ jsx7("strong", { children: targetUrl }),
           "), but the authenticated deep report requires a real Shopify install. See ",
-          /* @__PURE__ */ jsx6("code", { children: "apps/aeo-app/README.md" }),
+          /* @__PURE__ */ jsx7("code", { children: "apps/aeo-app/README.md" }),
           " to wire the Partner app."
         ] }) }),
-        deepError && !isDeep && tier !== "free" && /* @__PURE__ */ jsx6(Banner, { tone: "attention", title: "Authenticated scan unavailable", children: /* @__PURE__ */ jsxs5("p", { children: [
+        deepError && !isDeep && tier !== "free" && /* @__PURE__ */ jsx7(Banner, { tone: "attention", title: "Authenticated scan unavailable", children: /* @__PURE__ */ jsxs6("p", { children: [
           deepError,
           " \u2014 showing public scan results."
         ] }) }),
-        /* @__PURE__ */ jsxs5(Layout, { children: [
-          /* @__PURE__ */ jsx6(Layout.Section, { variant: "oneThird", children: /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", align: "center", children: [
-            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingLg", alignment: "center", children: "AI-Visibility Score" }),
-            /* @__PURE__ */ jsx6(Box, { padding: "400", background: "bg-surface-secondary", borderRadius: "200", children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "200", align: "center", children: [
-              /* @__PURE__ */ jsxs5(
+        /* @__PURE__ */ jsxs6(Layout, { children: [
+          /* @__PURE__ */ jsx7(Layout.Section, { variant: "oneThird", children: /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "300", align: "center", children: [
+            /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingLg", alignment: "center", children: "AI-Visibility Score" }),
+            /* @__PURE__ */ jsx7(Box, { padding: "400", background: "bg-surface-secondary", borderRadius: "200", children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "200", align: "center", children: [
+              /* @__PURE__ */ jsxs6(
                 Text,
                 {
                   as: "p",
@@ -12090,34 +12841,34 @@ function Dashboard() {
                   tone: SCORE_COLOR(score),
                   children: [
                     score,
-                    /* @__PURE__ */ jsx6(Text, { as: "span", variant: "headingLg", tone: "subdued", children: " / 100" })
+                    /* @__PURE__ */ jsx7(Text, { as: "span", variant: "headingLg", tone: "subdued", children: " / 100" })
                   ]
                 }
               ),
-              /* @__PURE__ */ jsxs5(Badge, { tone: GRADE_COLOR[grade] || "attention", size: "large", children: [
+              /* @__PURE__ */ jsxs6(Badge, { tone: GRADE_COLOR[grade] || "attention", size: "large", children: [
                 "Grade ",
                 grade
               ] })
             ] }) }),
-            /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", alignment: "center", children: [
+            /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", alignment: "center", children: [
               "Weighted from 5 live signals.",
               " ",
               analyzedAt ? `Last scanned ${new Date(analyzedAt).toLocaleTimeString()}.` : ""
             ] })
           ] }) }) }),
-          /* @__PURE__ */ jsx6(Layout.Section, { children: /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "400", children: [
-            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Sub-scores" }),
+          /* @__PURE__ */ jsx7(Layout.Section, { children: /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "400", children: [
+            /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Sub-scores" }),
             Object.entries(SUB_SCORE_LABELS).map(([key, meta]) => {
               let sub = subScores[key], val = sub ? sub.score : null, source = sub ? sub.source || (isDeep ? "admin" : "storefront") : null;
-              return /* @__PURE__ */ jsxs5(BlockStack, { gap: "100", children: [
-                /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", children: [
-                  /* @__PURE__ */ jsxs5(InlineStack, { gap: "200", align: "start", children: [
-                    /* @__PURE__ */ jsx6(Text, { as: "span", variant: "bodyMd", fontWeight: "medium", children: meta.label }),
-                    source && /* @__PURE__ */ jsx6(Badge, { tone: "info", size: "small", children: source })
+              return /* @__PURE__ */ jsxs6(BlockStack, { gap: "100", children: [
+                /* @__PURE__ */ jsxs6(InlineStack, { align: "space-between", children: [
+                  /* @__PURE__ */ jsxs6(InlineStack, { gap: "200", align: "start", children: [
+                    /* @__PURE__ */ jsx7(Text, { as: "span", variant: "bodyMd", fontWeight: "medium", children: meta.label }),
+                    source && /* @__PURE__ */ jsx7(Badge, { tone: "info", size: "small", children: source })
                   ] }),
-                  /* @__PURE__ */ jsx6(Text, { as: "span", variant: "bodyMd", tone: val !== null ? SCORE_COLOR(val) : "subdued", children: val !== null ? `${val}/100` : "n/a" })
+                  /* @__PURE__ */ jsx7(Text, { as: "span", variant: "bodyMd", tone: val !== null ? SCORE_COLOR(val) : "subdued", children: val !== null ? `${val}/100` : "n/a" })
                 ] }),
-                /* @__PURE__ */ jsx6(
+                /* @__PURE__ */ jsx7(
                   ProgressBar,
                   {
                     progress: val !== null ? val : 0,
@@ -12125,17 +12876,17 @@ function Dashboard() {
                     size: "small"
                   }
                 ),
-                /* @__PURE__ */ jsx6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: meta.desc })
+                /* @__PURE__ */ jsx7(Text, { as: "p", variant: "bodySm", tone: "subdued", children: meta.desc })
               ] }, key);
             })
           ] }) }) })
         ] }),
-        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "400", children: [
-          /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", children: [
-            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Ranked Fix List" }),
-            /* @__PURE__ */ jsx6(Badge, { tone: tier === "free" ? "attention" : "success", children: tier === "free" ? "Free \u2014 top 3 shown" : tier === "starter" ? "Starter" : "Pro" })
+        /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "400", children: [
+          /* @__PURE__ */ jsxs6(InlineStack, { align: "space-between", children: [
+            /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Ranked Fix List" }),
+            /* @__PURE__ */ jsx7(Badge, { tone: tier === "free" ? "attention" : "success", children: tier === "free" ? "Free \u2014 top 3 shown" : tier === "starter" ? "Starter" : "Pro" })
           ] }),
-          fixRows.length > 0 ? /* @__PURE__ */ jsx6(
+          fixRows.length > 0 ? /* @__PURE__ */ jsx7(
             DataTable,
             {
               columnContentTypes: ["text", "text", "text", "text", "text"],
@@ -12143,56 +12894,56 @@ function Dashboard() {
               rows: fixRows,
               truncate: !0
             }
-          ) : /* @__PURE__ */ jsx6(Banner, { tone: "success", title: "No gaps found", children: /* @__PURE__ */ jsx6("p", { children: "Your store scores well across all five AEO dimensions." }) }),
-          lockedCount > 0 && tier === "free" && /* @__PURE__ */ jsxs5(Fragment2, { children: [
-            /* @__PURE__ */ jsx6(Divider, {}),
-            /* @__PURE__ */ jsx6(
+          ) : /* @__PURE__ */ jsx7(Banner, { tone: "success", title: "No gaps found", children: /* @__PURE__ */ jsx7("p", { children: "Your store scores well across all five AEO dimensions." }) }),
+          lockedCount > 0 && tier === "free" && /* @__PURE__ */ jsxs6(Fragment2, { children: [
+            /* @__PURE__ */ jsx7(Divider, {}),
+            /* @__PURE__ */ jsx7(
               Banner,
               {
                 tone: "attention",
                 title: `${lockedCount} more fix${lockedCount > 1 ? "es" : ""} available on Starter ($12/mo)`,
                 action: { content: "Upgrade to Starter", url: "/app/billing?plan=starter" },
-                children: /* @__PURE__ */ jsx6("p", { children: "Unlock every ranked fix, one-click schema injection, and the full product feed completeness scorer. No risk \u2014 cancel any time." })
+                children: /* @__PURE__ */ jsx7("p", { children: "Unlock every ranked fix, one-click schema injection, and the full product feed completeness scorer. No risk \u2014 cancel any time." })
               }
             )
           ] })
         ] }) }),
-        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
-          /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", children: [
-            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "AI Citation Tracking" }),
-            /* @__PURE__ */ jsx6(Badge, { tone: tier === "pro" ? "success" : "critical", children: tier === "pro" ? "Pro" : "Pro plan only" })
+        /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsxs6(InlineStack, { align: "space-between", children: [
+            /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "AI Citation Tracking" }),
+            /* @__PURE__ */ jsx7(Badge, { tone: tier === "pro" ? "success" : "critical", children: tier === "pro" ? "Pro" : "Pro plan only" })
           ] }),
-          tier === "pro" ? /* @__PURE__ */ jsxs5(Banner, { tone: "info", title: "Citation tracking is live", children: [
-            /* @__PURE__ */ jsx6("p", { children: "Weekly checks across ChatGPT, Perplexity, Gemini & Copilot. View your tracked prompts and share-of-voice trends." }),
-            /* @__PURE__ */ jsx6(Button, { url: "/app/citations", children: "View citation dashboard" })
-          ] }) : /* @__PURE__ */ jsx6(
+          tier === "pro" ? /* @__PURE__ */ jsxs6(Banner, { tone: "info", title: "Citation tracking is live", children: [
+            /* @__PURE__ */ jsx7("p", { children: "Weekly checks across ChatGPT, Perplexity, Gemini & Copilot. View your tracked prompts and share-of-voice trends." }),
+            /* @__PURE__ */ jsx7(Button, { url: "/app/citations", children: "View citation dashboard" })
+          ] }) : /* @__PURE__ */ jsx7(
             Banner,
             {
               tone: "warning",
               title: "Track which AI engines mention your store",
               action: { content: "Upgrade to Pro ($79/mo)", url: "/app/billing?plan=pro" },
-              children: /* @__PURE__ */ jsx6("p", { children: 'Set up buyer-intent prompts ("best running shoes under $150") and Hatchloop AEO checks them weekly across 4 AI engines \u2014 reporting your share-of-voice and week-over-week trend.' })
+              children: /* @__PURE__ */ jsx7("p", { children: 'Set up buyer-intent prompts ("best running shoes under $150") and Hatchloop AEO checks them weekly across 4 AI engines \u2014 reporting your share-of-voice and week-over-week trend.' })
             }
           )
         ] }) }),
-        report.evidence && /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "200", children: [
-          /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Raw Evidence" }),
-          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+        report.evidence && /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "200", children: [
+          /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Raw Evidence" }),
+          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
             "Schema types found: ",
             (report.evidence.schemaTypesFound || []).join(", ") || "none"
           ] }),
-          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
             "llms.txt: ",
             report.evidence.llmsTxt && report.evidence.llmsTxt.present ? `present (${report.evidence.llmsTxt.bytes} bytes)` : "not found"
           ] }),
-          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
             "agents.md: ",
             String(report.evidence.agentsMd),
             " | ",
             "robots allows AI: ",
             String(report.evidence.robotsAllowsAi)
           ] }),
-          report.evidence.productFeed && /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+          report.evidence.productFeed && /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
             "Product feed: ",
             report.evidence.productFeed.sampled,
             " products sampled,",
@@ -12204,7 +12955,254 @@ function Dashboard() {
             "% with alt text"
           ] })
         ] }) }),
-        /* @__PURE__ */ jsx6(Text, { as: "p", variant: "bodySm", tone: "subdued", alignment: "center", children: report.disclaimer })
+        /* @__PURE__ */ jsx7(Text, { as: "p", variant: "bodySm", tone: "subdued", alignment: "center", children: report.disclaimer })
+      ] })
+    }
+  );
+}
+
+// app/routes/llms[.]txt.jsx
+var llms_txt_exports = {};
+__export(llms_txt_exports, {
+  loader: () => loader7
+});
+
+// app/engine/llms.server.js
+function stripHtml3(s) {
+  return String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+}
+function summarize(seoDesc, body, max = 160) {
+  let text2 = stripHtml3(seoDesc) || stripHtml3(body);
+  return text2 ? text2.length <= max ? text2 : text2.slice(0, max).replace(/\s+\S*$/, "").trim() + "\u2026" : "";
+}
+function trimSlash2(u) {
+  return String(u || "").replace(/\/+$/, "");
+}
+function priceLabel(product) {
+  let p = product.priceRangeV2?.minVariantPrice;
+  if (!p || p.amount == null)
+    return "";
+  let amount = Number(p.amount);
+  if (Number.isNaN(amount))
+    return "";
+  let cur = p.currencyCode || "", min = product.priceRangeV2?.minVariantPrice?.amount, max = product.priceRangeV2?.maxVariantPrice?.amount, money = (v) => `${cur} ${Number(v).toFixed(2)}`.trim();
+  return min != null && max != null && Number(max) > Number(min) ? `${money(min)}\u2013${money(max)}` : money(amount);
+}
+function productUrl(product, shopUrl) {
+  return product.onlineStoreUrl ? product.onlineStoreUrl : `${shopUrl}/products/${product.handle}`;
+}
+function collectionUrl(collection, shopUrl) {
+  return collection.onlineStoreUrl ? collection.onlineStoreUrl : `${shopUrl}/collections/${collection.handle}`;
+}
+function buildLlmsTxt({ shop = {}, products = [], collections = [], maxProducts = 150 } = {}) {
+  let shopUrl = trimSlash2(shop.primaryDomainUrl || shop.url || ""), name = (shop.name || "Store").trim(), summary = summarize(shop.description, "", 240) || `Online store${products.length ? ` with ${products.length}+ products` : ""}${shop.currencyCode ? ` priced in ${shop.currencyCode}` : ""}.`, lines = [];
+  lines.push(`# ${name}`), lines.push(""), lines.push(`> ${summary}`), lines.push("");
+  let facts = [];
+  if (shopUrl && facts.push(`- Store: ${shopUrl}`), shop.currencyCode && facts.push(`- Currency: ${shop.currencyCode}`), products.length && facts.push(`- Products listed below: ${Math.min(products.length, maxProducts)}`), collections.length && facts.push(`- Collections: ${collections.length}`), facts.length && (lines.push(facts.join(`
+`)), lines.push("")), collections.length) {
+    lines.push("## Collections"), lines.push("");
+    for (let c of collections) {
+      let url = collectionUrl(c, shopUrl), note = summarize(c.description, "", 120), count = c.productsCount?.count != null ? ` (${c.productsCount.count} products)` : "";
+      lines.push(`- [${(c.title || "Collection").trim()}](${url})${note ? `: ${note}` : ""}${count}`);
+    }
+    lines.push("");
+  }
+  if (products.length) {
+    lines.push("## Products"), lines.push("");
+    for (let p of products.slice(0, maxProducts)) {
+      let url = productUrl(p, shopUrl), note = summarize(p.seo?.description, p.description || p.descriptionHtml, 160), meta = [priceLabel(p), p.vendor && p.vendor !== name ? p.vendor : null].filter(Boolean).join(" \xB7 "), tail = [note, meta].filter(Boolean).join(" \u2014 ");
+      lines.push(`- [${(p.title || "Product").trim()}](${url})${tail ? `: ${tail}` : ""}`);
+    }
+    products.length > maxProducts && (lines.push(""), lines.push(`_\u2026and ${products.length - maxProducts} more products at ${shopUrl}/products_`)), lines.push("");
+  }
+  return lines.push("---"), lines.push(""), lines.push(`_Generated by Hatchloop AEO for ${name}. This file helps AI answer engines`), lines.push("(ChatGPT, Perplexity, Gemini, Claude, Google AI Mode) discover and cite this store._"), lines.push(""), lines.join(`
+`);
+}
+
+// app/routes/llms[.]txt.jsx
+var LLMS_MAX_PRODUCTS = 150, CACHE_CONTROL = "public, max-age=3600, stale-while-revalidate=86400";
+function textResponse(body, status = 200) {
+  return new Response(body, {
+    status,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": CACHE_CONTROL,
+      "X-Robots-Tag": "all"
+    }
+  });
+}
+async function loader7({ request }) {
+  if (IS_MOCK) {
+    let catalog = mockCatalog();
+    return textResponse(buildLlmsTxt({ ...catalog, maxProducts: LLMS_MAX_PRODUCTS }));
+  }
+  let admin;
+  try {
+    ({ admin } = await authenticateAppProxy(request));
+  } catch {
+    return textResponse(
+      `# llms.txt
+
+> This file is served through the store's App Proxy.
+`,
+      401
+    );
+  }
+  try {
+    let catalog = await fetchCatalog({ adminGraphqlFn: async (query, variables) => {
+      let body = await (await admin.graphql(query, { variables })).json();
+      if (body.errors)
+        throw new Error(body.errors.map((e) => e.message).join("; "));
+      return body.data;
+    }, productLimit: LLMS_MAX_PRODUCTS });
+    return textResponse(buildLlmsTxt({ ...catalog, maxProducts: LLMS_MAX_PRODUCTS }));
+  } catch {
+    return textResponse(`# llms.txt
+
+> Temporarily unavailable while the catalog is read.
+`, 503);
+  }
+}
+
+// app/routes/app.llms.jsx
+var app_llms_exports = {};
+__export(app_llms_exports, {
+  action: () => action10,
+  default: () => LlmsPage,
+  loader: () => loader8
+});
+import { json as json12 } from "@remix-run/node";
+import { useLoaderData as useLoaderData7, useNavigation as useNavigation4, Form as Form4 } from "@remix-run/react";
+import { useCallback as useCallback20, useState as useState18 } from "react";
+import { jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
+var LLMS_MAX_PRODUCTS2 = 150;
+async function loader8({ request }) {
+  let shop, admin = null;
+  if (IS_MOCK)
+    shop = getShopFromRequest(request);
+  else {
+    let auth = await authenticateAdmin(request);
+    admin = auth.admin, shop = auth.session.shop;
+  }
+  let catalog = null, fetchError = null;
+  if (IS_MOCK)
+    catalog = mockCatalog();
+  else
+    try {
+      catalog = await fetchCatalog({ adminGraphqlFn: async (query, variables) => {
+        let body = await (await admin.graphql(query, { variables })).json();
+        if (body.errors)
+          throw new Error(body.errors.map((e) => e.message).join("; "));
+        return body.data;
+      }, productLimit: LLMS_MAX_PRODUCTS2 });
+    } catch (e) {
+      fetchError = e.message, catalog = { shop: { name: shop, primaryDomainUrl: `https://${shop}` }, products: [], collections: [] };
+    }
+  let llmsTxt = buildLlmsTxt({ ...catalog, maxProducts: LLMS_MAX_PRODUCTS2 }), host = catalog.shop.host || (IS_MOCK ? "northwind-outfitters.example.com" : shop);
+  return json12({
+    isMock: IS_MOCK,
+    shop,
+    llmsTxt,
+    bytes: Buffer.byteLength(llmsTxt, "utf8"),
+    counts: { products: catalog.products.length, collections: catalog.collections.length },
+    proxyUrl: `https://${host}/apps/hatchloop/llms.txt`,
+    fetchError
+  });
+}
+async function action10() {
+  return json12({ ok: !0 });
+}
+function LlmsPage() {
+  let { isMock, llmsTxt, bytes, counts, proxyUrl, fetchError } = useLoaderData7(), busy = useNavigation4().state !== "idle", [copied, setCopied] = useState18(!1), copy = useCallback20(() => {
+    typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(llmsTxt).then(() => {
+      setCopied(!0), setTimeout(() => setCopied(!1), 1800);
+    });
+  }, [llmsTxt]), download = useCallback20(() => {
+    if (typeof document > "u")
+      return;
+    let blob = new Blob([llmsTxt], { type: "text/plain;charset=utf-8" }), url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url, a.download = "llms.txt", document.body.appendChild(a), a.click(), document.body.removeChild(a), URL.revokeObjectURL(url);
+  }, [llmsTxt]);
+  return /* @__PURE__ */ jsx8(
+    Page,
+    {
+      title: "AI Discovery File \u2014 llms.txt",
+      subtitle: "A clean, linked map of your catalog for AI answer engines (ChatGPT, Perplexity, Gemini, Google AI Mode)",
+      backAction: { content: "Dashboard", url: "/app" },
+      primaryAction: /* @__PURE__ */ jsx8(Form4, { method: "post", children: /* @__PURE__ */ jsx8(Button, { submit: !0, loading: busy, tone: "success", children: busy ? "Regenerating\u2026" : "Regenerate from catalog" }) }),
+      children: /* @__PURE__ */ jsxs7(BlockStack, { gap: "400", children: [
+        isMock && /* @__PURE__ */ jsx8(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsx8("p", { children: "Auth is mocked, so this preview is built from a stub catalog. Installed on a real store, it reads your live products and collections via the authenticated Admin API." }) }),
+        fetchError && /* @__PURE__ */ jsxs7(Banner, { tone: "critical", title: "Could not read the full catalog", children: [
+          /* @__PURE__ */ jsx8("p", { children: fetchError }),
+          /* @__PURE__ */ jsx8("p", { children: "Showing a minimal file \u2014 retry after confirming the app has product read access." })
+        ] }),
+        /* @__PURE__ */ jsxs7(Layout, { children: [
+          /* @__PURE__ */ jsx8(Layout.Section, { variant: "oneThird", children: /* @__PURE__ */ jsx8(Card, { children: /* @__PURE__ */ jsxs7(BlockStack, { gap: "300", children: [
+            /* @__PURE__ */ jsx8(Text, { as: "h2", variant: "headingMd", children: "Why this matters" }),
+            /* @__PURE__ */ jsxs7(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+              "AI answer engines look for ",
+              /* @__PURE__ */ jsx8("code", { children: "llms.txt" }),
+              " to understand a site fast. Without it they scrape rendered HTML and often miss or misquote your products. With it, they get your exact catalog \u2014 names, links, prices \u2014 ready to cite."
+            ] }),
+            /* @__PURE__ */ jsx8(Divider, {}),
+            /* @__PURE__ */ jsxs7(InlineStack, { gap: "200", wrap: !0, children: [
+              /* @__PURE__ */ jsx8(Badge, { tone: "success", children: `${counts.products} products` }),
+              /* @__PURE__ */ jsx8(Badge, { tone: "info", children: `${counts.collections} collections` }),
+              /* @__PURE__ */ jsx8(Badge, { children: `${(bytes / 1024).toFixed(1)} KB` })
+            ] })
+          ] }) }) }),
+          /* @__PURE__ */ jsx8(Layout.Section, { children: /* @__PURE__ */ jsx8(Card, { children: /* @__PURE__ */ jsxs7(BlockStack, { gap: "300", children: [
+            /* @__PURE__ */ jsxs7(InlineStack, { align: "space-between", blockAlign: "center", children: [
+              /* @__PURE__ */ jsx8(Text, { as: "h2", variant: "headingMd", children: "Preview" }),
+              /* @__PURE__ */ jsxs7(InlineStack, { gap: "200", children: [
+                /* @__PURE__ */ jsx8(Button, { onClick: copy, size: "slim", children: copied ? "Copied \u2713" : "Copy" }),
+                /* @__PURE__ */ jsx8(Button, { onClick: download, size: "slim", variant: "primary", children: "Download" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx8(
+              Box,
+              {
+                background: "bg-surface-secondary",
+                borderRadius: "200",
+                padding: "300",
+                overflowX: "scroll",
+                children: /* @__PURE__ */ jsx8("pre", { style: {
+                  margin: 0,
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                  fontSize: "12px",
+                  lineHeight: 1.5,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  maxHeight: "460px",
+                  overflowY: "auto"
+                }, children: llmsTxt })
+              }
+            )
+          ] }) }) })
+        ] }),
+        /* @__PURE__ */ jsx8(Card, { children: /* @__PURE__ */ jsxs7(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsx8(Text, { as: "h2", variant: "headingMd", children: "Publish it" }),
+          /* @__PURE__ */ jsx8(Text, { as: "p", variant: "bodySm", tone: "subdued", children: "Two ways to make this reachable by AI crawlers:" }),
+          /* @__PURE__ */ jsxs7(List, { type: "number", children: [
+            /* @__PURE__ */ jsx8(List.Item, { children: /* @__PURE__ */ jsxs7(Text, { as: "span", variant: "bodySm", children: [
+              /* @__PURE__ */ jsx8("strong", { children: "App Proxy (automatic):" }),
+              " once the proxy is enabled, this exact file is served live at",
+              " ",
+              /* @__PURE__ */ jsx8("code", { children: proxyUrl }),
+              " \u2014 it stays in sync with your catalog on every request."
+            ] }) }),
+            /* @__PURE__ */ jsx8(List.Item, { children: /* @__PURE__ */ jsxs7(Text, { as: "span", variant: "bodySm", children: [
+              /* @__PURE__ */ jsx8("strong", { children: "Root hosting (optional):" }),
+              " some crawlers prefer",
+              " ",
+              /* @__PURE__ */ jsx8("code", { children: "/llms.txt" }),
+              " at the domain root. Download the file above and add a redirect from ",
+              /* @__PURE__ */ jsx8("code", { children: "/llms.txt" }),
+              " to the proxy URL, or host it at the root."
+            ] }) })
+          ] }),
+          /* @__PURE__ */ jsx8(Banner, { tone: "info", title: "Keep it fresh", children: /* @__PURE__ */ jsx8("p", { children: "Regenerate after adding products or rewriting descriptions so the file AI engines read always reflects your current catalog." }) })
+        ] }) })
       ] })
     }
   );
@@ -12213,20 +13211,20 @@ function Dashboard() {
 // app/routes/auth.$.jsx
 var auth_exports = {};
 __export(auth_exports, {
-  loader: () => loader6
+  loader: () => loader9
 });
 import { redirect } from "@remix-run/node";
-async function loader6({ request }) {
+async function loader9({ request }) {
   return IS_MOCK ? redirect("/app") : (await authenticateAdmin(request), redirect("/app"));
 }
 
 // app/routes/_index.jsx
 var index_exports = {};
 __export(index_exports, {
-  loader: () => loader7
+  loader: () => loader10
 });
 import { redirect as redirect2 } from "@remix-run/node";
-function loader7({ request }) {
+function loader10({ request }) {
   let url = new URL(request.url);
   return url.searchParams.get("shop") ? redirect2(`/app?${url.searchParams.toString()}`) : redirect2("https://hatchloop.dev");
 }
@@ -12235,19 +13233,19 @@ function loader7({ request }) {
 var app_exports = {};
 __export(app_exports, {
   default: () => AppLayout,
-  loader: () => loader8
+  loader: () => loader11
 });
-import { json as json11 } from "@remix-run/node";
-import { Outlet as Outlet2, useLoaderData as useLoaderData6, NavLink } from "@remix-run/react";
-import { jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
-async function loader8({ request }) {
-  return IS_MOCK || await authenticateAdmin(request), json11({ isMock: IS_MOCK });
+import { json as json13 } from "@remix-run/node";
+import { Outlet as Outlet2, useLoaderData as useLoaderData8, NavLink } from "@remix-run/react";
+import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
+async function loader11({ request }) {
+  return IS_MOCK || await authenticateAdmin(request), json13({ isMock: IS_MOCK });
 }
 var navStyle = { display: "flex", gap: "12px", padding: "8px 16px", borderBottom: "1px solid #e1e3e5", fontSize: "14px" }, linkStyle = (isActive) => ({ fontWeight: isActive ? 700 : 400, color: "#202223", textDecoration: "none" });
 function AppLayout() {
-  let { isMock } = useLoaderData6();
-  return /* @__PURE__ */ jsxs6(AppProvider, { i18n: en_default, children: [
-    isMock && /* @__PURE__ */ jsx7("div", { style: {
+  let { isMock } = useLoaderData8();
+  return /* @__PURE__ */ jsxs8(AppProvider, { i18n: en_default, children: [
+    isMock && /* @__PURE__ */ jsx9("div", { style: {
       background: "#fffbe6",
       borderBottom: "2px solid #f59e0b",
       padding: "8px 16px",
@@ -12255,17 +13253,19 @@ function AppLayout() {
       color: "#92400e",
       fontFamily: "monospace"
     }, children: "SCAFFOLD MODE \u2014 AUTH_MODE=mock. Real Shopify OAuth not wired yet. See apps/aeo-app/README.md to connect a Partner app." }),
-    /* @__PURE__ */ jsxs6("nav", { style: navStyle, children: [
-      /* @__PURE__ */ jsx7(NavLink, { to: "/app", end: !0, style: ({ isActive }) => linkStyle(isActive), children: "AEO Score" }),
-      /* @__PURE__ */ jsx7(NavLink, { to: "/app/descriptions", style: ({ isActive }) => linkStyle(isActive), children: "AI Descriptions" }),
-      /* @__PURE__ */ jsx7(NavLink, { to: "/app/billing", style: ({ isActive }) => linkStyle(isActive), children: "Plans" })
+    /* @__PURE__ */ jsxs8("nav", { style: navStyle, children: [
+      /* @__PURE__ */ jsx9(NavLink, { to: "/app", end: !0, style: ({ isActive }) => linkStyle(isActive), children: "AEO Score" }),
+      /* @__PURE__ */ jsx9(NavLink, { to: "/app/descriptions", style: ({ isActive }) => linkStyle(isActive), children: "AI Descriptions" }),
+      /* @__PURE__ */ jsx9(NavLink, { to: "/app/llms", style: ({ isActive }) => linkStyle(isActive), children: "llms.txt" }),
+      /* @__PURE__ */ jsx9(NavLink, { to: "/app/schema", style: ({ isActive }) => linkStyle(isActive), children: "JSON-LD" }),
+      /* @__PURE__ */ jsx9(NavLink, { to: "/app/billing", style: ({ isActive }) => linkStyle(isActive), children: "Plans" })
     ] }),
-    /* @__PURE__ */ jsx7(Outlet2, {})
+    /* @__PURE__ */ jsx9(Outlet2, {})
   ] });
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-YVTZQHLV.js", imports: ["/build/_shared/chunk-3IKC2CFJ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-QWLB7F4L.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-XQE3PMFZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-NR5XCFZD.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-2UE4ACUG.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-XQE3PMFZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-EI3ZVURX.js", imports: ["/build/_shared/chunk-XQE3PMFZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-GQ6RUSH2.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-XQE3PMFZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-YA2IPVEO.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-XQE3PMFZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "b013f373", hmr: void 0, url: "/build/manifest-B013F373.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-ZJVEGTWE.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-RETQ7SRK.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "66f7e53f", hmr: void 0, url: "/build/manifest-66F7E53F.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {
@@ -12341,6 +13341,14 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     caseSensitive: void 0,
     module: app_billing_exports
   },
+  "routes/app.schema": {
+    id: "routes/app.schema",
+    parentId: "routes/app",
+    path: "schema",
+    index: void 0,
+    caseSensitive: void 0,
+    module: app_schema_exports
+  },
   "routes/app._index": {
     id: "routes/app._index",
     parentId: "routes/app",
@@ -12348,6 +13356,22 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     index: !0,
     caseSensitive: void 0,
     module: app_index_exports
+  },
+  "routes/llms[.]txt": {
+    id: "routes/llms[.]txt",
+    parentId: "root",
+    path: "llms.txt",
+    index: void 0,
+    caseSensitive: void 0,
+    module: llms_txt_exports
+  },
+  "routes/app.llms": {
+    id: "routes/app.llms",
+    parentId: "routes/app",
+    path: "llms",
+    index: void 0,
+    caseSensitive: void 0,
+    module: app_llms_exports
   },
   "routes/auth.$": {
     id: "routes/auth.$",

@@ -164,8 +164,10 @@ then calls the real Admin GraphQL API.
 | DB migrated | Done (auto-ran via `npx prisma migrate deploy` on first start) |
 | Partner Dashboard URLs updated | Done 2026-08-13 — `shopify app deploy` (hatchloop-aeo-2) registered URLs |
 | GDPR webhook routes created | Done 2026-08-13 — /webhooks/customers-data-request, /webhooks/customers-redact, /webhooks/shop-redact |
-| GDPR URLs set in Partner Dashboard | **HITL REQUIRED** — founder must enter 3 URLs in Partner Dashboard → Configuration → Privacy/GDPR |
-| OAuth test install on dev store | **HITL REQUIRED** — founder installs on dev store to test OAuth flow |
-| App listing content | Pending |
+| GDPR URLs set in Partner Dashboard | **HITL REQUIRED** — 3 URLs: /webhooks/customers-data-request, /customers-redact, /shop-redact on hatchloop-aeo.onrender.com. Founder "clicked generate + accept" 2026-08-13 — UNCONFIRMED if this completed all 3. |
+| OAuth test install on dev store | **Done 2026-08-13** — installed on hatchloop-aeo-test-store.myshopify.com; dashboard loads, 21/100 AEO grade, AI descriptions tab functional, billing gate active. |
+| App listing content | Partial — icon done; screenshots pending |
+| App icon 1200×1200 PNG | **Done 2026-08-13** — listing-assets/app-icon.png (scripts/gen_app_icon.py) |
+| App screenshots 1600×1200 PNG | **Done 2026-08-13** — listing-assets/screenshot-1.png through screenshot-5.png (puppeteer-core + system Chrome; 152-201 KB each) |
 | App Review submission | Pending (allow 5–10 business days) |
 | App version | hatchloop-aeo-3 (2026-08-13) |

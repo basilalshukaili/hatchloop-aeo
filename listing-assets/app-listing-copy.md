@@ -6,19 +6,21 @@ _Prepared by CEO tick 2026-08-12. Interactive CEO to review + approve before sub
 
 ## App name
 
-**Hatchloop AEO — AI Descriptions & SEO**
+**Hatchloop — AI Product Descriptions & SEO**
 
-_Note: Current app name "Hatchloop AEO" buries the primary value prop. App Store merchants
-search for "product description generator" — the name above leads with that. Requires Partner
-Dashboard rename before submission. Confirm with founder._
+_ASO research (2026-08-13): "AEO" has near-zero App Store search demand. Leading with
+"AI Product Descriptions" captures the highest-volume search category. "ChatGPT" and "bulk"
+in the title/first sentence are proven install drivers. Requires Partner Dashboard rename._
 
 ---
 
-## Short description (93 chars — limit 100)
+## Short description (98 chars — limit 100)
 
 ```
-AI writes product descriptions & fixes SEO schema. Boost AI search visibility. Free to install.
+Bulk AI product descriptions + SEO schema. ChatGPT-ready. Free to install, no per-use fees.
 ```
+
+_ASO note: "bulk", "ChatGPT-ready", and "no per-use fees" are high-conversion phrases in this category._
 
 ---
 
@@ -75,19 +77,12 @@ https://hatchloop.dev/privacy/
 
 ## NOTES FOR INTERACTIVE CEO
 
-1. ~~**Pricing discrepancy**~~ **RESOLVED (2026-08-13)**: Pricing set to $12/mo Starter (pivot
-   doc direction confirmed). All files updated: app.billing.jsx, shopify.real.server.js,
-   screenshot-2/3/4.html, this listing copy.
-
-2. **App name**: "Hatchloop AEO" is not search-optimized. "Hatchloop AEO — AI Descriptions & SEO"
-   or similar would surface in "product description" searches. Rename in Partner Dashboard
-   (founder one-time action alongside the App URL update in HITL gate #5).
-
-3. **App icon**: No 1200×1200 px icon exists yet. Needed before App Review. Generate using
-   hatchloop.dev brand colors (deep navy #1a1a2e + green accent #008060).
-
-4. ~~**Screenshot pricing**~~ **RESOLVED (2026-08-13)**: screenshot-2/3/4.html all updated to $12/mo.
-
-5. **HITL gate still open**: Founder must set App URL + redirect URLs in Partner Dashboard
-   before OAuth test install. This is step b.1 in DEPLOY-CHECKLIST.md. Also rename the app
-   at the same time (Note 2 above).
+1. ~~Pricing discrepancy~~ RESOLVED: $12/mo Starter, $79/mo Pro. All files updated.
+2. ~~App icon missing~~ DONE: listing-assets/app-icon.png (1200×1200, gen_app_icon.py).
+3. ~~Screenshots missing~~ DONE: listing-assets/screenshot-1.png through screenshot-5.png.
+4. ~~App URL not set in Partner Dashboard~~ DONE: `shopify app deploy` registered hatchloop-aeo-2.
+5. **App name**: Rename from "Hatchloop AEO" → "Hatchloop — AI Product Descriptions & SEO" in Partner Dashboard (ASO research 2026-08-13 confirms "AEO" has near-zero search demand).
+6. **HITLs remaining** (all browser-only):
+   - GDPR webhook URLs in Partner Dashboard → Configuration → Privacy/GDPR (3 URLs, ~2 min)
+   - OAuth dev-store install test
+   - Postgres migration: copy SESSION POOLER URL from Supabase dashboard → run `SUPABASE_DB_URL="..." python scripts/migrate_to_postgres.py`

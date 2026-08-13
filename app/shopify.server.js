@@ -75,6 +75,33 @@ export async function authenticateAdmin(request) {
 }
 
 /**
+ * authenticateAppProxy(request)
+ *
+ * For PUBLIC resource routes reached through a Shopify App Proxy (e.g. the store
+ * serving /apps/hatchloop/llms.txt). Shopify signs the proxied request; the
+ * shopify-app-remix helper verifies the HMAC and hands back an `admin` client
+ * bound to that shop's stored offline session — so a route with NO embedded
+ * session can still read the catalog.
+ *
+ * MOCK:  returns the stub session + a graphql() that throws (routes fall back to
+ *        mock catalog data, so local /llms.txt still renders).
+ * REAL:  delegates to authenticate.public.appProxy. Throws (401/redirect) if the
+ *        request is not a validly-signed proxy request.
+ */
+export async function authenticateAppProxy(request) {
+  if (IS_MOCK) {
+    const admin = {
+      graphql: async () => {
+        throw new Error('MOCK_ADMIN_GRAPHQL: app proxy admin unavailable in mock mode.');
+      },
+    };
+    return { session: MOCK_SESSION, admin };
+  }
+  const { authenticate } = await import('./shopify.real.server.js');
+  return authenticate.public.appProxy(request);
+}
+
+/**
  * getShopFromRequest — extracts the shop domain from the request.
  * MOCK: returns hardcoded shop. REAL: reads from the JWT/session managed by
  * shopify-app-remix (the shop param in the URL is the canonical source during OAuth).

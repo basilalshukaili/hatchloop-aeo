@@ -56,6 +56,12 @@ export default function AppLayout() {
         <NavLink to="/app/descriptions" style={({ isActive }) => linkStyle(isActive)}>
           AI Descriptions
         </NavLink>
+        <NavLink to="/app/llms" style={({ isActive }) => linkStyle(isActive)}>
+          llms.txt
+        </NavLink>
+        <NavLink to="/app/schema" style={({ isActive }) => linkStyle(isActive)}>
+          JSON-LD
+        </NavLink>
         <NavLink to="/app/billing" style={({ isActive }) => linkStyle(isActive)}>
           Plans
         </NavLink>
