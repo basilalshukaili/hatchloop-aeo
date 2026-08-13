@@ -12737,20 +12737,29 @@ async function loader6({ request }) {
   } catch (e) {
     publicError = e.message;
   }
-  if (tier !== "free" && !IS_MOCK)
+  let publicAccess = publicReport && publicReport.access ? publicReport.access : null, publicCrawlWalled = !!(publicAccess && (publicAccess.passwordPage || publicAccess.botBlocked)) || !!publicError;
+  if (IS_MOCK)
+    deepError = "Authenticated scan unavailable in MOCK mode \u2014 install on a real store to enable.";
+  else
     try {
-      deepReport = await runAuthenticatedScan({ adminGraphqlFn: async (query, variables) => {
-        let json14 = await (await admin.graphql(query, { variables })).json();
-        if (json14.errors)
-          throw new Error(json14.errors.map((e) => e.message).join("; "));
-        return json14.data;
-      }, publicReport, sample: 100 });
+      deepReport = await runAuthenticatedScan({
+        adminGraphqlFn: async (query, variables) => {
+          let json14 = await (await admin.graphql(query, { variables })).json();
+          if (json14.errors)
+            throw new Error(json14.errors.map((e) => e.message).join("; "));
+          return json14.data;
+        },
+        // Skip merging public storefront sub-scores when they came from a
+        // password/bot wall — score on the authenticated catalog alone instead.
+        publicReport: publicCrawlWalled ? null : publicReport,
+        sample: 100
+      });
     } catch (e) {
       deepError = e.message;
     }
-  else
-    tier !== "free" && IS_MOCK && (deepError = "Authenticated scan unavailable in MOCK mode \u2014 install on a real store to enable.");
-  let activeReport = deepReport || publicReport, allFixes = activeReport ? activeReport.allFixes || [] : [], { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
+  let activeReport = deepReport || publicReport, scoredFromAuth = !!deepReport, crawlNote = null;
+  scoredFromAuth && publicAccess && (publicAccess.blocked || publicAccess.storefrontEmpty) ? crawlNote = { reason: publicAccess.reason } : scoredFromAuth && publicError && (crawlNote = { reason: "unreachable" });
+  let allFixes = activeReport ? activeReport.allFixes || [] : [], { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
   return json11({
     shop,
     tier,
@@ -12761,8 +12770,9 @@ async function loader6({ request }) {
     deepError,
     fixes,
     lockedCount,
-    isDeep: !!deepReport,
-    analyzedAt: activeReport ? activeReport.analyzedAt : null
+    isDeep: scoredFromAuth,
+    analyzedAt: activeReport ? activeReport.analyzedAt : null,
+    crawlNote
   });
 }
 async function action9({ request }) {
@@ -12781,6 +12791,23 @@ var SCORE_COLOR = (s) => s >= 80 ? "success" : s >= 65 ? "info" : s >= 50 ? "war
   answer: "Answer Readiness",
   multiMarket: "Multi-Market",
   catalogHygiene: "Catalog Hygiene"
+}, HYGIENE_LABEL = { label: "Catalog Hygiene", desc: "Active vs draft/archived products in your real catalog" }, CRAWL_NOTE = {
+  "password-protected": {
+    title: "This store blocks public AI crawls \u2014 scored from your authenticated catalog",
+    body: "Your storefront is password-protected, so public AI crawlers cannot see it yet. This score is computed from your real Shopify catalog (Admin API) \u2014 it reflects your actual products and climbs as you improve them. Public AI-visibility signals (llms.txt, JSON-LD, robots.txt) start counting once your store is live to the public."
+  },
+  "bot-blocked": {
+    title: "This store blocks public AI crawls \u2014 scored from your authenticated catalog",
+    body: "Your storefront blocks automated crawlers (bot / WAF protection), so public AI crawlers cannot read it. This score is computed from your real Shopify catalog (Admin API) instead of a public crawl."
+  },
+  "empty-storefront": {
+    title: "No products are publicly crawlable yet \u2014 scored from your authenticated catalog",
+    body: "Your public storefront exposes no products yet, so this score is computed from your real Shopify catalog (Admin API). It reflects your actual products and climbs as you add and enrich them."
+  },
+  unreachable: {
+    title: "Public storefront unreachable \u2014 scored from your authenticated catalog",
+    body: "Your public storefront could not be crawled, so this score is computed from your real Shopify catalog (Admin API) instead."
+  }
 };
 function Dashboard() {
   let {
@@ -12793,7 +12820,8 @@ function Dashboard() {
     isMock,
     targetUrl,
     isDeep,
-    analyzedAt
+    analyzedAt,
+    crawlNote
   } = useLoaderData6(), isScanning = useNavigation3().state !== "idle";
   if (publicError && !report)
     return /* @__PURE__ */ jsx7(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsxs6(Banner, { tone: "critical", title: "Scan failed", children: [
@@ -12802,7 +12830,10 @@ function Dashboard() {
     ] }) });
   if (!report)
     return /* @__PURE__ */ jsx7(Page, { title: "Hatchloop AEO", children: /* @__PURE__ */ jsx7(EmptyState, { heading: "Running your first AEO scan\u2026", image: "", children: /* @__PURE__ */ jsx7(Spinner, {}) }) });
-  let score = report.score, grade = report.grade, subScores = report.subScores || {}, fixRows = fixes.map((f, i) => [
+  let score = report.score, grade = report.grade, subScores = report.subScores || {}, subScoreRows = [];
+  for (let [key, meta] of Object.entries(SUB_SCORE_LABELS))
+    subScoreRows.push([key, meta]), key === "feedCompleteness" && subScores.catalogHygiene && subScoreRows.push(["catalogHygiene", HYGIENE_LABEL]);
+  let ev = report.evidence || {}, feedEv = ev.productFeed || ev.feed || null, hasStorefrontEvidence = Array.isArray(ev.schemaTypesFound) || "agentsMd" in ev || !!ev.llmsTxt, fixRows = fixes.map((f, i) => [
     `#${i + 1}`,
     CATEGORY_LABELS[f.category] || f.category,
     `+${f.gain} pts`,
@@ -12823,7 +12854,8 @@ function Dashboard() {
           /* @__PURE__ */ jsx7("code", { children: "apps/aeo-app/README.md" }),
           " to wire the Partner app."
         ] }) }),
-        deepError && !isDeep && tier !== "free" && /* @__PURE__ */ jsx7(Banner, { tone: "attention", title: "Authenticated scan unavailable", children: /* @__PURE__ */ jsxs6("p", { children: [
+        crawlNote && CRAWL_NOTE[crawlNote.reason] && /* @__PURE__ */ jsx7(Banner, { tone: "info", title: CRAWL_NOTE[crawlNote.reason].title, children: /* @__PURE__ */ jsx7("p", { children: CRAWL_NOTE[crawlNote.reason].body }) }),
+        deepError && !isDeep && !isMock && /* @__PURE__ */ jsx7(Banner, { tone: "attention", title: "Authenticated scan unavailable", children: /* @__PURE__ */ jsxs6("p", { children: [
           deepError,
           " \u2014 showing public scan results."
         ] }) }),
@@ -12858,7 +12890,7 @@ function Dashboard() {
           ] }) }) }),
           /* @__PURE__ */ jsx7(Layout.Section, { children: /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "400", children: [
             /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Sub-scores" }),
-            Object.entries(SUB_SCORE_LABELS).map(([key, meta]) => {
+            subScoreRows.map(([key, meta]) => {
               let sub = subScores[key], val = sub ? sub.score : null, source = sub ? sub.source || (isDeep ? "admin" : "storefront") : null;
               return /* @__PURE__ */ jsxs6(BlockStack, { gap: "100", children: [
                 /* @__PURE__ */ jsxs6(InlineStack, { align: "space-between", children: [
@@ -12928,31 +12960,52 @@ function Dashboard() {
         ] }) }),
         report.evidence && /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "200", children: [
           /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Raw Evidence" }),
-          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "Schema types found: ",
-            (report.evidence.schemaTypesFound || []).join(", ") || "none"
+          hasStorefrontEvidence && /* @__PURE__ */ jsxs6(Fragment2, { children: [
+            /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+              "Schema types found: ",
+              (ev.schemaTypesFound || []).join(", ") || "none"
+            ] }),
+            /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+              "llms.txt: ",
+              ev.llmsTxt && ev.llmsTxt.present ? `present (${ev.llmsTxt.bytes} bytes)` : "not found"
+            ] }),
+            /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+              "agents.md: ",
+              String(!!ev.agentsMd),
+              " | ",
+              "robots allows AI: ",
+              String(!!ev.robotsAllowsAi)
+            ] })
           ] }),
-          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "llms.txt: ",
-            report.evidence.llmsTxt && report.evidence.llmsTxt.present ? `present (${report.evidence.llmsTxt.bytes} bytes)` : "not found"
-          ] }),
-          /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "agents.md: ",
-            String(report.evidence.agentsMd),
-            " | ",
-            "robots allows AI: ",
-            String(report.evidence.robotsAllowsAi)
-          ] }),
-          report.evidence.productFeed && /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+          feedEv && feedEv.sampled ? /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
             "Product feed: ",
-            report.evidence.productFeed.sampled,
-            " products sampled,",
+            feedEv.sampled,
+            " products ",
+            isDeep ? "graded" : "sampled",
+            ",",
             " ",
-            report.evidence.productFeed.goodDescPct,
+            feedEv.goodDescPct,
             "% with good descriptions,",
             " ",
-            report.evidence.productFeed.altTextPct,
-            "% with alt text"
+            feedEv.altTextPct,
+            "% with alt text",
+            typeof feedEv.seoDescPct == "number" ? `, ${feedEv.seoDescPct}% with an SEO meta description` : ""
+          ] }) : null,
+          ev.statusCounts && /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Authenticated catalog: ",
+            ev.statusCounts.ACTIVE || 0,
+            " active,",
+            " ",
+            ev.statusCounts.DRAFT || 0,
+            " draft,",
+            " ",
+            ev.statusCounts.ARCHIVED || 0,
+            " archived"
+          ] }),
+          ev.access && ev.access.reason && /* @__PURE__ */ jsxs6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Public crawl: ",
+            ev.access.reason,
+            ev.access.rootStatus ? ` (HTTP ${ev.access.rootStatus})` : ""
           ] })
         ] }) }),
         /* @__PURE__ */ jsx7(Text, { as: "p", variant: "bodySm", tone: "subdued", alignment: "center", children: report.disclaimer })
@@ -13265,7 +13318,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-ZJVEGTWE.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-RETQ7SRK.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "66f7e53f", hmr: void 0, url: "/build/manifest-66F7E53F.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-2XYXQDY3.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-RETQ7SRK.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "fe74bee6", hmr: void 0, url: "/build/manifest-FE74BEE6.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {

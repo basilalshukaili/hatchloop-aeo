@@ -54,14 +54,30 @@ export async function loader({ request }) {
     ? (process.env.MOCK_SCAN_URL || 'https://allbirds.com')
     : `https://${shop}`;
 
+  // The public scan (a) supplies live storefront signals to merge into the deep
+  // report and (b) tells us whether the public storefront is crawlable at all
+  // (password wall / bot-block / empty) so we can score honestly.
   try {
     publicReport = await runPublicScan(targetUrl);
   } catch (e) {
     publicError = e.message;
   }
 
-  // Authenticated deep scan (Starter / Pro or if session has real token)
-  if (tier !== 'free' && !IS_MOCK) {
+  const publicAccess = (publicReport && publicReport.access) ? publicReport.access : null;
+  // A password/bot WALL makes the public storefront sub-scores meaningless — never
+  // let them drag the merchant's true catalog score down. (An empty-but-LIVE store
+  // still has a valid theme / JSON-LD / llms.txt, so those we DO merge.)
+  const publicCrawlWalled =
+    !!(publicAccess && (publicAccess.passwordPage || publicAccess.botBlocked)) || !!publicError;
+
+  // REAL MODE: the installed store has a valid Admin session, so ALWAYS run the
+  // authenticated scan REGARDLESS OF TIER. It reads the real Admin catalog — the
+  // products a password-protected / empty public storefront hides — so it is the
+  // honest primary score and CLIMBS as the merchant fixes things. Bill-safe: the
+  // authed engine is bounded (<=6 Admin GraphQL calls) and makes NO paid LLM calls.
+  // (The DEEP fix-list detail is still tier-gated below via gateFixes; only the
+  // SCORE + sub-score signals are ungated.)
+  if (!IS_MOCK) {
     try {
       // reuse the `admin` authenticated at the top of the loader
       const adminGraphqlFn = async (query, variables) => {
@@ -70,16 +86,35 @@ export async function loader({ request }) {
         if (json.errors) throw new Error(json.errors.map(e => e.message).join('; '));
         return json.data;
       };
-      deepReport = await runAuthenticatedScan({ adminGraphqlFn, publicReport, sample: 100 });
+      deepReport = await runAuthenticatedScan({
+        adminGraphqlFn,
+        // Skip merging public storefront sub-scores when they came from a
+        // password/bot wall — score on the authenticated catalog alone instead.
+        publicReport: publicCrawlWalled ? null : publicReport,
+        sample: 100,
+      });
     } catch (e) {
       deepError = e.message;
     }
-  } else if (tier !== 'free' && IS_MOCK) {
+  } else {
     deepError = 'Authenticated scan unavailable in MOCK mode — install on a real store to enable.';
   }
 
-  // Use the deepReport score if available, otherwise public
+  // PREFER the authenticated (deep) report as the primary score; fall back to the
+  // public scan only if the authenticated scan failed.
   const activeReport = deepReport || publicReport;
+  const scoredFromAuth = !!deepReport;
+
+  // Honest note (task #16): the public storefront could not be crawled, but we
+  // scored the merchant from their authenticated catalog instead — say so rather
+  // than showing a bad grade.
+  let crawlNote = null;
+  if (scoredFromAuth && publicAccess && (publicAccess.blocked || publicAccess.storefrontEmpty)) {
+    crawlNote = { reason: publicAccess.reason };
+  } else if (scoredFromAuth && publicError) {
+    crawlNote = { reason: 'unreachable' };
+  }
+
   const allFixes = activeReport ? (activeReport.allFixes || []) : [];
   const { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
 
@@ -93,8 +128,9 @@ export async function loader({ request }) {
     deepError,
     fixes,
     lockedCount,
-    isDeep: !!deepReport,
+    isDeep: scoredFromAuth,
     analyzedAt: activeReport ? activeReport.analyzedAt : null,
+    crawlNote,
   });
 }
 
@@ -127,9 +163,34 @@ const CATEGORY_LABELS = {
   catalogHygiene: 'Catalog Hygiene',
 };
 
+// Catalog Hygiene is an Admin-only signal — only present on the authenticated
+// (deep) report — so it is rendered as an extra bar when a deep scan ran.
+const HYGIENE_LABEL = { label: 'Catalog Hygiene', desc: 'Active vs draft/archived products in your real catalog' };
+
+// Honest crawl-block note copy (task #16). Shown when the public storefront could
+// not be crawled but the score was computed from the authenticated catalog.
+const CRAWL_NOTE = {
+  'password-protected': {
+    title: 'This store blocks public AI crawls — scored from your authenticated catalog',
+    body: 'Your storefront is password-protected, so public AI crawlers cannot see it yet. This score is computed from your real Shopify catalog (Admin API) — it reflects your actual products and climbs as you improve them. Public AI-visibility signals (llms.txt, JSON-LD, robots.txt) start counting once your store is live to the public.',
+  },
+  'bot-blocked': {
+    title: 'This store blocks public AI crawls — scored from your authenticated catalog',
+    body: 'Your storefront blocks automated crawlers (bot / WAF protection), so public AI crawlers cannot read it. This score is computed from your real Shopify catalog (Admin API) instead of a public crawl.',
+  },
+  'empty-storefront': {
+    title: 'No products are publicly crawlable yet — scored from your authenticated catalog',
+    body: 'Your public storefront exposes no products yet, so this score is computed from your real Shopify catalog (Admin API). It reflects your actual products and climbs as you add and enrich them.',
+  },
+  'unreachable': {
+    title: 'Public storefront unreachable — scored from your authenticated catalog',
+    body: 'Your public storefront could not be crawled, so this score is computed from your real Shopify catalog (Admin API) instead.',
+  },
+};
+
 export default function Dashboard() {
   const { report, publicError, deepError, fixes, lockedCount, tier, isMock,
-          targetUrl, isDeep, analyzedAt } = useLoaderData();
+          targetUrl, isDeep, analyzedAt, crawlNote } = useLoaderData();
   const nav = useNavigation();
   const isScanning = nav.state !== 'idle';
 
@@ -158,6 +219,24 @@ export default function Dashboard() {
   const score = report.score;
   const grade = report.grade;
   const subScores = report.subScores || {};
+
+  // Sub-score rows: the 5 storefront dimensions, plus Catalog Hygiene when the
+  // authenticated (deep) report supplied it (an Admin-only real-catalog signal).
+  const subScoreRows = [];
+  for (const [key, meta] of Object.entries(SUB_SCORE_LABELS)) {
+    subScoreRows.push([key, meta]);
+    if (key === 'feedCompleteness' && subScores.catalogHygiene) {
+      subScoreRows.push(['catalogHygiene', HYGIENE_LABEL]);
+    }
+  }
+
+  // Raw-evidence card handles BOTH report shapes: the public scan
+  // (schema/llms/agents/robots + productFeed) and the deep scan (feed agg +
+  // statusCounts). Guard each block so a deep report never prints "undefined".
+  const ev = report.evidence || {};
+  const feedEv = ev.productFeed || ev.feed || null;
+  const hasStorefrontEvidence =
+    Array.isArray(ev.schemaTypesFound) || ('agentsMd' in ev) || !!ev.llmsTxt;
 
   // ── Fix list rows ─────────────────────────────────────────────────────────
   const fixRows = fixes.map((f, i) => [
@@ -193,8 +272,17 @@ export default function Dashboard() {
           </Banner>
         )}
 
-        {/* Deep scan error (non-fatal) */}
-        {deepError && !isDeep && tier !== 'free' && (
+        {/* Honest crawl-block note (task #16): public storefront un-crawlable,
+            scored from the authenticated catalog instead of showing a bad grade. */}
+        {crawlNote && CRAWL_NOTE[crawlNote.reason] && (
+          <Banner tone="info" title={CRAWL_NOTE[crawlNote.reason].title}>
+            <p>{CRAWL_NOTE[crawlNote.reason].body}</p>
+          </Banner>
+        )}
+
+        {/* Deep scan error (non-fatal) — auth runs for every real install now, so
+            surface this whenever the authed scan failed and we fell back to public. */}
+        {deepError && !isDeep && !isMock && (
           <Banner tone="attention" title="Authenticated scan unavailable">
             <p>{deepError} — showing public scan results.</p>
           </Banner>
@@ -233,7 +321,7 @@ export default function Dashboard() {
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">Sub-scores</Text>
-                {Object.entries(SUB_SCORE_LABELS).map(([key, meta]) => {
+                {subScoreRows.map(([key, meta]) => {
                   const sub = subScores[key];
                   const val = sub ? sub.score : null;
                   const source = sub ? (sub.source || (isDeep ? 'admin' : 'storefront')) : null;
@@ -347,23 +435,42 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="200">
               <Text as="h2" variant="headingMd">Raw Evidence</Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                Schema types found: {(report.evidence.schemaTypesFound || []).join(', ') || 'none'}
-              </Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                llms.txt: {report.evidence.llmsTxt && report.evidence.llmsTxt.present
-                  ? `present (${report.evidence.llmsTxt.bytes} bytes)` : 'not found'}
-              </Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                agents.md: {String(report.evidence.agentsMd)}
-                {' | '}
-                robots allows AI: {String(report.evidence.robotsAllowsAi)}
-              </Text>
-              {report.evidence.productFeed && (
+              {hasStorefrontEvidence && (
+                <>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Schema types found: {(ev.schemaTypesFound || []).join(', ') || 'none'}
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    llms.txt: {ev.llmsTxt && ev.llmsTxt.present
+                      ? `present (${ev.llmsTxt.bytes} bytes)` : 'not found'}
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    agents.md: {String(!!ev.agentsMd)}
+                    {' | '}
+                    robots allows AI: {String(!!ev.robotsAllowsAi)}
+                  </Text>
+                </>
+              )}
+              {feedEv && feedEv.sampled ? (
                 <Text as="p" variant="bodySm" tone="subdued">
-                  Product feed: {report.evidence.productFeed.sampled} products sampled,
-                  {' '}{report.evidence.productFeed.goodDescPct}% with good descriptions,
-                  {' '}{report.evidence.productFeed.altTextPct}% with alt text
+                  Product feed: {feedEv.sampled} products {isDeep ? 'graded' : 'sampled'},
+                  {' '}{feedEv.goodDescPct}% with good descriptions,
+                  {' '}{feedEv.altTextPct}% with alt text
+                  {typeof feedEv.seoDescPct === 'number'
+                    ? `, ${feedEv.seoDescPct}% with an SEO meta description` : ''}
+                </Text>
+              ) : null}
+              {ev.statusCounts && (
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Authenticated catalog: {ev.statusCounts.ACTIVE || 0} active,
+                  {' '}{ev.statusCounts.DRAFT || 0} draft,
+                  {' '}{ev.statusCounts.ARCHIVED || 0} archived
+                </Text>
+              )}
+              {ev.access && ev.access.reason && (
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Public crawl: {ev.access.reason}
+                  {ev.access.rootStatus ? ` (HTTP ${ev.access.rootStatus})` : ''}
                 </Text>
               )}
             </BlockStack>

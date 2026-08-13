@@ -343,6 +343,50 @@ function scoreMultiMarket(ctx) {
   return { score: clamp(Math.round(s), 0, 100), detail: { hreflang, multiMarket }, fixes };
 }
 
+// ── crawl-access detection ─────────────────────────────────────────────────────
+// An installed store's PUBLIC storefront may be un-crawlable: password-protected
+// (Shopify dev/unpublished stores 302 → /password), behind a bot/WAF challenge, or
+// live-but-empty. In those cases the public sub-scores are meaningless and the app
+// must fall back to the AUTHENTICATED (Admin API) catalog for an honest score. This
+// helper classifies WHY the public crawl is degraded so the UI can say so.
+function detectAccessState({ rootStatus, finalUrl, html, productsJsonOk, productsJson }) {
+  const rawHtml = html || '';
+  const h = rawHtml.toLowerCase();
+  const fu = (finalUrl || '').toLowerCase();
+
+  // Password wall: platforms redirect a locked storefront to /password, and the
+  // password template carries a stable body/section class + tell-tale copy.
+  const passwordPage =
+    /\/password\/?(?:$|[?#])/.test(fu) ||
+    /class=["'][^"']*template-password/i.test(rawHtml) ||
+    /id=["']shopify-section[^"']*password/i.test(rawHtml) ||
+    /(enter (?:store )?using password|store is password[- ]protected|this store is currently unavailable|opening soon)/i.test(h);
+
+  // Bot / WAF challenge or hard block on the root fetch.
+  const botBlocked =
+    rootStatus === 401 || rootStatus === 403 || rootStatus === 429 || rootStatus === 503 ||
+    /(just a moment|cf-browser-verification|attention required|enable javascript and cookies|please verify you are (?:a )?human|access denied|are you a robot)/i.test(h);
+
+  // Live storefront that publicly exposes zero products.
+  const feedCount = productsJson && Array.isArray(productsJson.products) ? productsJson.products.length : null;
+  const storefrontEmpty = !!(productsJsonOk && feedCount === 0);
+
+  const blocked = passwordPage || botBlocked;
+  const reason = passwordPage ? 'password-protected'
+    : botBlocked ? 'bot-blocked'
+    : storefrontEmpty ? 'empty-storefront'
+    : null;
+
+  return {
+    blocked,
+    passwordPage,
+    botBlocked,
+    storefrontEmpty,
+    rootStatus: (rootStatus === undefined ? null : rootStatus),
+    reason,
+  };
+}
+
 // ── weighting of the 5 sub-scores into the headline 0-100 ─────────────────────────
 const WEIGHTS = {
   discoverability: 0.25,
@@ -423,6 +467,16 @@ async function analyzeStore(rawUrl, deps) {
     robotsAllowsAi = !blocksAi;
   }
 
+  // classify public crawlability (password wall / bot-block / empty) so the app can
+  // fall back to the authenticated catalog score and explain why (task #16).
+  const access = detectAccessState({
+    rootStatus: root.status,
+    finalUrl: root.finalUrl,
+    html,
+    productsJsonOk,
+    productsJson,
+  });
+
   // derive collections / product types from feed for the llms.txt recommendation
   const productTypes = productsJson && productsJson.products
     ? Array.from(new Set(productsJson.products.map(p => p.product_type).filter(Boolean))).slice(0, 8)
@@ -481,6 +535,7 @@ async function analyzeStore(rawUrl, deps) {
     },
     score: overall,
     grade,
+    access,
     subScores: {
       discoverability: { score: sub.discoverability.score, weight: WEIGHTS.discoverability },
       feedCompleteness: { score: sub.feed.score, weight: WEIGHTS.feed },
@@ -497,6 +552,7 @@ async function analyzeStore(rawUrl, deps) {
       robotsAllowsAi,
       productFeed: products,
       answerContent: answer,
+      access,
       fetched,
     },
     topFixes: allFixes.slice(0, 3).map(f => ({ category: f.category, gain: f.pts, fix: f.text, needsApp: !!f.needsApp })),
@@ -507,4 +563,4 @@ async function analyzeStore(rawUrl, deps) {
   };
 }
 
-module.exports = { analyzeStore, normalizeStoreUrl, _internals: { extractJsonLd, gradeProducts, analyzeLlmsTxt, scoreSchema, scoreFeed } };
+module.exports = { analyzeStore, normalizeStoreUrl, _internals: { extractJsonLd, gradeProducts, analyzeLlmsTxt, scoreSchema, scoreFeed, detectAccessState } };
