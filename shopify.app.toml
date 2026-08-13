@@ -1,11 +1,11 @@
-# shopify.app.toml — Hatchloop AEO
+# shopify.app.toml — Hatchloop - AI Product Descriptions & SEO
 #
 # client_id is wired (2026-06-14).
 # DEPLOY-TODO: replace REPLACE_WITH_DEPLOY_URL below with the real production
 # or tunnel URL before running `shopify app deploy` or installing on a store.
 # See apps/aeo-app/DEPLOY-CHECKLIST.md for the full sequence.
 
-name = "Hatchloop AEO"
+name = "Hatchloop AI Descriptions SEO"
 client_id = "f585e00fb49a58947efdbe9c8729934b"  # SHOPIFY_APP_CLIENT_ID (rotated 2026-08-12) — real Partner app, org 4968387
 application_url = "https://hatchloop-aeo.onrender.com"
 embedded = true
