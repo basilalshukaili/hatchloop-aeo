@@ -1,117 +1,147 @@
 {% comment %}
-  Hatchloop AEO — Theme App Extension: Schema Injection Block
-  Injects Product, Offer, AggregateRating, Organization, BreadcrumbList,
-  and (on FAQ pages) FAQPage JSON-LD into the storefront theme.
+  Hatchloop AEO — Theme App Extension: Schema Injection (app embed block)
 
-  This block is injected via the Theme App Extension mechanism — no theme
-  code is modified and the block is cleanly removed on app uninstall.
+  Injects JSON-LD structured data site-wide so AI answer engines (ChatGPT,
+  Perplexity, Gemini, Google AI Mode) and Google Search can read accurate,
+  structured facts about this store. No theme code is edited — this app
+  embed block (and everything it renders) is removed automatically when the
+  app is uninstalled. Unlike the Admin API `themeFilesUpsert` install path
+  (app/routes/app.schema.jsx), this works for EVERY merchant with no Shopify
+  theme-access exemption required.
 
-  SCAFFOLD: The metafield namespaces (hatchloop_aeo.*) need to be registered
-  via the Admin API before this block reads live data. The block renders
-  sensible fallbacks from native Liquid objects in the meantime.
+  Emits, gated by the settings toggles below (all default ON):
+    - Organization   — every page
+    - Product        — product pages only: name, description, brand (vendor),
+                        every product image, one Offer per variant
+                        (price/currency/availability/sku/gtin), plus
+                        aggregateRating if a "reviews" metafield app (e.g.
+                        Judge.me / the Shopify Product Reviews app) has
+                        written product.metafields.reviews.rating.
+    - BreadcrumbList — product & collection pages
+
+  HONEST LIMITATION — double-injection guard: Liquid cannot inspect the final
+  rendered HTML of the page during its own render, so this block has no way to
+  detect whether the theme itself, or another app, already outputs the same
+  JSON-LD "@type" on the same page. There is no reliable programmatic
+  workaround for that within the theme-app-extension sandbox. Instead, each
+  schema type has its own merchant-controlled checkbox in the theme editor
+  (Apps > Hatchloop AEO Schema). Merchants who already have Product or
+  Organization schema — check with view-source: and search for
+  `application/ld+json` — should turn the matching toggle OFF here to avoid
+  shipping duplicate structured data on the same page. This same warning is
+  repeated in the app's in-admin Structured Data page.
 {% endcomment %}
 
-{%- liquid
-  assign aeo_product = product
-  assign aeo_org_name = shop.name
-  assign aeo_org_url  = shop.url
--%}
-
-{%- if aeo_product -%}
+{%- if block.settings.enable_organization_schema -%}
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  "name": {{ aeo_product.title | json }},
-  "description": {{ aeo_product.description | strip_html | json }},
-  "url": "{{ shop.url }}{{ aeo_product.url }}",
-  "sku": {{ aeo_product.selected_or_first_available_variant.sku | json }},
-  "brand": {
-    "@type": "Brand",
-    "name": {{ aeo_product.vendor | json }}
-  },
-  {%- if aeo_product.featured_image -%}
-  "image": [
-    "{{ aeo_product.featured_image | image_url: width: 1200 }}"
-  ],
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }}
+  {%- if shop.email != blank -%}
+  ,"email": {{ shop.email | json }}
   {%- endif -%}
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": {{ cart.currency.iso_code | json }},
-    "price": "{{ aeo_product.selected_or_first_available_variant.price | money_without_currency }}",
-    "availability": "{% if aeo_product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
-    "url": "{{ shop.url }}{{ aeo_product.url }}",
-    "seller": {
-      "@type": "Organization",
-      "name": {{ aeo_org_name | json }}
-    }
-  }
-  {%- if aeo_product.metafields.reviews.rating -%}
-  ,"aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "{{ aeo_product.metafields.reviews.rating.value | times: 1 }}",
-    "reviewCount": "{{ aeo_product.metafields.reviews.rating_count }}"
-  }
+  {%- if shop.description != blank -%}
+  ,"description": {{ shop.description | strip_html | truncatewords: 50 | json }}
   {%- endif -%}
 }
 </script>
 {%- endif -%}
 
-{%- comment %} Organization schema — injected on every page {%- endcomment -%}
+{%- if product -%}
+  {%- if block.settings.enable_product_schema -%}
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": {{ aeo_org_name | json }},
-  "url": {{ aeo_org_url | json }}
-  {%- if shop.metafields.hatchloop_aeo.org_logo -%}
-  ,"logo": "{{ shop.metafields.hatchloop_aeo.org_logo }}"
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "description": {{ product.description | strip_html | truncatewords: 60 | json }},
+  "url": {{ shop.url | append: product.url | json }}
+  {%- if product.images.size > 0 -%}
+  ,"image": [
+    {%- for image in product.images -%}
+    {{ image | image_url: width: 1200 | json }}{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ]
+  {%- endif -%}
+  ,"brand": { "@type": "Brand", "name": {{ product.vendor | default: shop.name | json }} }
+  ,"offers": [
+    {%- for variant in product.variants -%}
+    {
+      "@type": "Offer",
+      "url": {{ shop.url | append: variant.url | json }},
+      "priceCurrency": {{ cart.currency.iso_code | json }},
+      "price": {{ variant.price | money_without_currency | strip_html | json }},
+      "availability": "{%- if variant.available -%}https://schema.org/InStock{%- else -%}https://schema.org/OutOfStock{%- endif -%}"
+      {%- if variant.sku != blank -%}
+      ,"sku": {{ variant.sku | json }}
+      {%- endif -%}
+      {%- if variant.barcode != blank -%}
+      ,"gtin": {{ variant.barcode | json }}
+      {%- endif -%}
+    }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ]
+  {%- if product.metafields.reviews.rating.value != blank -%}
+  ,"aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": {{ product.metafields.reviews.rating.value | json }},
+    "reviewCount": {{ product.metafields.reviews.rating_count | default: 0 | json }}
+  }
   {%- endif -%}
 }
 </script>
+  {%- endif -%}
+{%- endif -%}
 
-{%- comment -%}
-  BreadcrumbList — injected when template is product or collection
-{%- endcomment -%}
-{%- if template contains 'product' or template contains 'collection' -%}
+{%- if block.settings.enable_breadcrumbs -%}
+  {%- if template contains 'product' or template contains 'collection' -%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": {{ shop.url | json }}
-    }
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": {{ shop.url | json }} }
     {%- if collection -%}
-    ,{
-      "@type": "ListItem",
-      "position": 2,
-      "name": {{ collection.title | json }},
-      "item": "{{ shop.url }}{{ collection.url }}"
-    }
+    ,{ "@type": "ListItem", "position": 2, "name": {{ collection.title | json }}, "item": {{ shop.url | append: collection.url | json }} }
     {%- endif -%}
-    {%- if aeo_product -%}
-    ,{
-      "@type": "ListItem",
-      "position": {% if collection %}3{% else %}2{% endif %},
-      "name": {{ aeo_product.title | json }},
-      "item": "{{ shop.url }}{{ aeo_product.url }}"
-    }
+    {%- if product -%}
+    ,{ "@type": "ListItem", "position": {% if collection %}3{% else %}2{% endif %}, "name": {{ product.title | json }}, "item": {{ shop.url | append: product.url | json }} }
     {%- endif -%}
   ]
 }
 </script>
+  {%- endif -%}
 {%- endif -%}
 
-{%- comment -%}
-  FAQPage schema — injected when the hatchloop_aeo.faq_json metafield is set
-  (Starter/Pro: the app writes this metafield via Admin API after merchant review)
-{%- endcomment -%}
-{%- if shop.metafields.hatchloop_aeo.faq_json -%}
-<script type="application/ld+json">
-{{ shop.metafields.hatchloop_aeo.faq_json.value }}
-</script>
-{%- endif -%}
+{% schema %}
+{
+  "name": "Hatchloop AEO Schema",
+  "target": "head",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Injects Organization, Product, and Breadcrumb structured data (JSON-LD) so AI answer engines and Google can read accurate facts about this store. Turn a toggle OFF below ONLY if your theme or another app already outputs that exact schema type on the same page — Liquid can't detect existing JSON-LD automatically, so please check your page source first (view-source:, search for application/ld+json)."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_organization_schema",
+      "label": "Inject Organization schema (every page)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_product_schema",
+      "label": "Inject Product schema (product pages)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_breadcrumbs",
+      "label": "Inject BreadcrumbList schema (product & collection pages)",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

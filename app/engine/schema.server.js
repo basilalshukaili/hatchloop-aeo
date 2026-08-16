@@ -1,13 +1,22 @@
 /**
  * schema.server.js — builds structured data (JSON-LD) for a store.
  *
- * Two jobs:
+ * Three jobs:
  *   1. Concrete JSON-LD OBJECTS from real shop/product data — for the in-app
  *      preview so a merchant sees exactly what AI/Google will read and can paste
  *      it into a validator.
- *   2. A dynamic Liquid SNIPPET (buildSchemaLiquidSnippet) that renders correct
- *      Organization + Product + BreadcrumbList JSON-LD per-page on the storefront.
- *      This snippet is what the "install to theme" action writes via themeFilesUpsert.
+ *   2. A deep link into the Shopify theme editor's "App embeds" panel
+ *      (buildThemeEditorEmbedDeepLink) — the PRIMARY install path. It points at
+ *      the bundled Theme App Extension app embed block
+ *      (extensions/aeo-theme-ext/blocks/aeo-schema.liquid), which works for
+ *      EVERY merchant on any Online Store 2.0 theme with no Shopify
+ *      theme-access exemption required.
+ *   3. A dynamic Liquid SNIPPET (buildSchemaLiquidSnippet) that renders the
+ *      same Organization + Product + BreadcrumbList JSON-LD per-page — kept as
+ *      a FALLBACK for merchants who can't/won't enable the app embed. This is
+ *      what the "install to theme" action writes via themeFilesUpsert, which
+ *      requires write_themes AND a theme-access exemption Shopify grants
+ *      case-by-case — hence "fallback," not primary.
  *
  * Why JSON-LD matters for AEO: answer engines and Google AI Mode lift facts
  * (price, availability, brand, ratings) straight out of Product/Organization
@@ -31,7 +40,35 @@ function trimSlash(u) {
   return String(u || '').replace(/\/+$/, '');
 }
 
-// ── The Liquid snippet the app writes into a theme ──────────────────────────────
+// ── Theme App Extension app embed (PRIMARY install path) ────────────────────────
+// Handle = the block's Liquid filename minus ".liquid" — see
+// extensions/aeo-theme-ext/blocks/aeo-schema.liquid and
+// extensions/aeo-theme-ext/shopify.extension.toml.
+export const APP_EMBED_BLOCK_HANDLE = 'aeo-schema';
+export const APP_EMBED_BLOCK_NAME = 'Hatchloop AEO Schema';
+
+/**
+ * buildThemeEditorEmbedDeepLink({ shop }) -> string
+ *
+ * Deep link into the merchant's live theme editor with the "App embeds" panel
+ * open, where they toggle on the bundled Theme App Extension block. This is
+ * the format Shopify recommends when you just want to land the merchant on
+ * the App embeds panel (no specific theme id / extension uuid required, so it
+ * never goes stale): https://admin.shopify.com/store/{shop}/themes/current/editor?context=apps
+ * Verified against shopify.dev "App embed block deep linking" (2026-08-16).
+ *
+ * `shop` may be a bare handle ("my-store") or a full myshopify.com domain
+ * ("my-store.myshopify.com") — either is normalized to the handle admin.shopify.com expects.
+ */
+export function buildThemeEditorEmbedDeepLink({ shop = '' } = {}) {
+  const handle = String(shop)
+    .replace(/^https?:\/\//, '')
+    .replace(/\.myshopify\.com.*$/, '')
+    .replace(/\/.*$/, '');
+  return `https://admin.shopify.com/store/${handle}/themes/current/editor?context=apps`;
+}
+
+// ── The Liquid snippet the app writes into a theme (FALLBACK install path) ──────
 export const SNIPPET_FILENAME = 'snippets/hatchloop-aeo-schema.liquid';
 export const RENDER_TAG = "{% render 'hatchloop-aeo-schema' %}";
 // A stable marker so we never inject the render tag twice into theme.liquid.

@@ -12282,6 +12282,10 @@ function stripHtml2(s) {
 function trimSlash(u) {
   return String(u || "").replace(/\/+$/, "");
 }
+var APP_EMBED_BLOCK_NAME = "Hatchloop AEO Schema";
+function buildThemeEditorEmbedDeepLink({ shop = "" } = {}) {
+  return `https://admin.shopify.com/store/${String(shop).replace(/^https?:\/\//, "").replace(/\.myshopify\.com.*$/, "").replace(/\/.*$/, "")}/themes/current/editor?context=apps`;
+}
 var SNIPPET_FILENAME = "snippets/hatchloop-aeo-schema.liquid", RENDER_TAG = "{% render 'hatchloop-aeo-schema' %}", RENDER_MARKER = "hatchloop-aeo-schema";
 function buildSchemaLiquidSnippet() {
   return `{% comment %}
@@ -12452,7 +12456,7 @@ async function loader5({ request }) {
       themes2 = [];
     }
   }
-  let shopUrl = catalog.shop.primaryDomainUrl || `https://${shop}`, org = buildOrganizationJsonLd({ shop: catalog.shop }), sample = catalog.products.find((p) => p.priceRangeV2?.minVariantPrice?.amount != null) || catalog.products[0] || null, product = sample ? buildProductJsonLd({ product: sample, shopUrl }) : null, coverage = schemaCoverageSummary({ shop: catalog.shop, products: catalog.products }), installable = themes2.filter((t) => t.role === "UNPUBLISHED");
+  let shopUrl = catalog.shop.primaryDomainUrl || `https://${shop}`, org = buildOrganizationJsonLd({ shop: catalog.shop }), sample = catalog.products.find((p) => p.priceRangeV2?.minVariantPrice?.amount != null) || catalog.products[0] || null, product = sample ? buildProductJsonLd({ product: sample, shopUrl }) : null, coverage = schemaCoverageSummary({ shop: catalog.shop, products: catalog.products }), installable = themes2.filter((t) => t.role === "UNPUBLISHED"), embedDeepLink = buildThemeEditorEmbedDeepLink({ shop });
   return json10({
     isMock: IS_MOCK,
     fetchError,
@@ -12465,7 +12469,9 @@ async function loader5({ request }) {
     renderTag: RENDER_TAG,
     themes: themes2,
     installable,
-    hasUnpublished: installable.length > 0
+    hasUnpublished: installable.length > 0,
+    embedDeepLink,
+    embedBlockName: APP_EMBED_BLOCK_NAME
   });
 }
 async function action8({ request }) {
@@ -12587,7 +12593,9 @@ function SchemaPage() {
     snippetFilename,
     renderTag,
     installable,
-    hasUnpublished
+    hasUnpublished,
+    embedDeepLink,
+    embedBlockName
   } = useLoaderData5(), actionData = useActionData(), nav = useNavigation2(), installing = nav.state !== "idle" && nav.formData?.get("intent") === "install", [themeId, setThemeId] = useState17(installable[0]?.id || ""), [snippetCopied, setSnippetCopied] = useState17(!1), copySnippet = useCallback19(() => {
     typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(snippet).then(() => {
       setSnippetCopied(!0), setTimeout(() => setSnippetCopied(!1), 1600);
@@ -12602,6 +12610,48 @@ function SchemaPage() {
       children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "400", children: [
         isMock && /* @__PURE__ */ jsx6(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsx6("p", { children: "Preview is built from a stub catalog and the install writes nothing. On a real store this reads your shop + products and can write the snippet to an unpublished theme." }) }),
         fetchError && /* @__PURE__ */ jsx6(Banner, { tone: "critical", title: "Could not read the catalog", children: /* @__PURE__ */ jsx6("p", { children: fetchError }) }),
+        /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
+          /* @__PURE__ */ jsxs5(InlineStack, { gap: "200", blockAlign: "center", children: [
+            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Recommended: turn on the app embed" }),
+            /* @__PURE__ */ jsx6(Badge, { tone: "success", children: "No exemption needed" })
+          ] }),
+          /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Hatchloop ships a ",
+            /* @__PURE__ */ jsx6("strong", { children: "Theme App Extension" }),
+            " \u2014 an app embed block called \u201C",
+            embedBlockName,
+            "\u201D \u2014 that injects Organization, Product, and Breadcrumb JSON-LD directly, without editing any theme files. It works on",
+            " ",
+            /* @__PURE__ */ jsx6("strong", { children: "every" }),
+            " Online Store 2.0 theme for every merchant, unlike the write-to-theme options below which need a Shopify theme-access exemption most stores don't have."
+          ] }),
+          /* @__PURE__ */ jsx6(InlineStack, { gap: "200", children: /* @__PURE__ */ jsx6(
+            Button,
+            {
+              variant: "primary",
+              url: embedDeepLink,
+              target: "_blank",
+              disabled: isMock,
+              children: "Open theme editor \u2192 enable app embed"
+            }
+          ) }),
+          isMock && /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+            "Disabled in MOCK mode (no real theme to open). On a real store this opens",
+            " ",
+            /* @__PURE__ */ jsx6("code", { children: embedDeepLink }),
+            "."
+          ] }),
+          /* @__PURE__ */ jsxs5(List, { type: "number", children: [
+            /* @__PURE__ */ jsx6(List.Item, { children: "Click the button \u2014 it opens your live theme editor with the App embeds panel open." }),
+            /* @__PURE__ */ jsxs5(List.Item, { children: [
+              "Find \u201C",
+              embedBlockName,
+              "\u201D in the list and toggle it ON."
+            ] }),
+            /* @__PURE__ */ jsx6(List.Item, { children: "Click Save. Structured data starts rendering immediately \u2014 no publish step for a live theme's embeds." })
+          ] }),
+          /* @__PURE__ */ jsx6(Banner, { tone: "info", title: "Already have Product or Organization schema?", children: /* @__PURE__ */ jsx6("p", { children: "The app embed has its own settings (visible when you click into the block in the theme editor) to turn OFF Product, Organization, or Breadcrumb schema individually. If your theme or a reviews/SEO app already outputs one of these types, turn the matching toggle off there to avoid duplicate JSON-LD on the same page \u2014 we can't detect that automatically from a theme extension, so please check your page source first." }) })
+        ] }) }),
         /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
           /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Why structured data lifts AI visibility" }),
           /* @__PURE__ */ jsx6(Text, { as: "p", variant: "bodySm", tone: "subdued", children: "Answer engines (ChatGPT, Perplexity, Gemini, Google AI Mode) lift price, availability, brand and images straight from JSON-LD. Products without it get guessed at \u2014 or skipped. Here is your current coverage across the sampled catalog:" }),
@@ -12630,17 +12680,18 @@ function SchemaPage() {
           }
         ) : /* @__PURE__ */ jsx6(Banner, { tone: "attention", title: "No products to sample", children: /* @__PURE__ */ jsx6("p", { children: "Add an active product to preview Product JSON-LD." }) }),
         /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
-          /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Install to your storefront" }),
+          /* @__PURE__ */ jsxs5(InlineStack, { gap: "200", blockAlign: "center", children: [
+            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Fallback: write the snippet to an unpublished theme" }),
+            /* @__PURE__ */ jsx6(Badge, { tone: "attention", children: "Needs a theme-access exemption" })
+          ] }),
           /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "Writes a dynamic Liquid snippet (",
+            "Only use this if the app embed above doesn't fit \u2014 for example a vintage theme without app-embed support. Writes a dynamic Liquid snippet (",
             /* @__PURE__ */ jsx6("code", { children: snippetFilename }),
-            ") to an",
-            " ",
+            ") to an ",
             /* @__PURE__ */ jsx6("strong", { children: "unpublished" }),
-            " theme and wires it into the theme's",
-            " ",
+            " theme and wires it into the theme's ",
             /* @__PURE__ */ jsx6("code", { children: "<head>" }),
-            ". It renders the right Organization + Product + BreadcrumbList schema on every page. Review it there, then publish the theme when you're happy \u2014 the live theme is never touched by this app."
+            ". It renders the same Organization + Product + BreadcrumbList schema on every page. Review it there, then publish the theme when you're happy \u2014 the live theme is never touched by this app. Don't combine this with the app embed on the same theme, or you'll ship duplicate JSON-LD."
           ] }),
           actionData?.ok && /* @__PURE__ */ jsxs5(Banner, { tone: "success", title: actionData.mock ? "Simulated (mock)" : `Installed to \u201C${actionData.themeName}\u201D`, children: [
             /* @__PURE__ */ jsxs5("p", { children: [
@@ -12677,11 +12728,11 @@ function SchemaPage() {
         ] }) }),
         /* @__PURE__ */ jsx6(Card, { children: /* @__PURE__ */ jsxs5(BlockStack, { gap: "300", children: [
           /* @__PURE__ */ jsxs5(InlineStack, { align: "space-between", blockAlign: "center", children: [
-            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Snippet (copy-paste fallback)" }),
+            /* @__PURE__ */ jsx6(Text, { as: "h2", variant: "headingMd", children: "Fallback: snippet (copy-paste by hand)" }),
             /* @__PURE__ */ jsx6(Button, { onClick: copySnippet, size: "slim", children: snippetCopied ? "Copied \u2713" : "Copy snippet" })
           ] }),
           /* @__PURE__ */ jsxs5(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "Prefer to do it by hand? Create ",
+            "Last resort if you can't use the app embed above and don't want to grant the theme-write install a try. Create ",
             /* @__PURE__ */ jsx6("code", { children: snippetFilename }),
             " in your theme and add ",
             /* @__PURE__ */ jsx6("code", { children: renderTag }),
@@ -12702,11 +12753,7 @@ function SchemaPage() {
             overflow: "auto"
           }, children: snippet }) }),
           /* @__PURE__ */ jsx6(Divider, {}),
-          /* @__PURE__ */ jsx6(List, { type: "bullet", children: /* @__PURE__ */ jsx6(List.Item, { children: /* @__PURE__ */ jsxs5(Text, { as: "span", variant: "bodySm", children: [
-            "Already using the bundled ",
-            /* @__PURE__ */ jsx6("strong", { children: "Theme App Extension" }),
-            "? That block does the same job with no exemption \u2014 enable it in the theme editor instead."
-          ] }) }) })
+          /* @__PURE__ */ jsx6(List, { type: "bullet", children: /* @__PURE__ */ jsx6(List.Item, { children: /* @__PURE__ */ jsx6(Text, { as: "span", variant: "bodySm", children: "Use only ONE install path per theme \u2014 the app embed, the unpublished-theme install, or this manual snippet. Combining more than one duplicates JSON-LD on the same page, which can confuse search engines and AI crawlers." }) }) })
         ] }) })
       ] })
     }
@@ -13318,7 +13365,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-2XYXQDY3.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-RETQ7SRK.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "fe74bee6", hmr: void 0, url: "/build/manifest-FE74BEE6.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-2XYXQDY3.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-D56LC7R7.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "0d3c8ed0", hmr: void 0, url: "/build/manifest-0D3C8ED0.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {

@@ -1,0 +1,27 @@
+# Theme App Extension config for the Hatchloop AEO schema-injection block.
+#
+# This extension injects JSON-LD (Organization + Product + BreadcrumbList) via
+# an app embed block — no theme code is modified, and the block (and anything
+# it injected) is removed automatically when the app is uninstalled. Works on
+# EVERY merchant/theme, no Shopify theme-access exemption required (unlike the
+# Admin API `themeFilesUpsert` install path in app/routes/app.schema.jsx).
+#
+# See blocks/aeo-schema.liquid for the block itself.
+#
+# Verified against current Shopify docs (2026-08-16) via the Shopify Dev MCP
+# (search_docs_chunks) + shopify.dev fetch:
+#   https://shopify.dev/docs/apps/build/online-store/theme-app-extensions/configuration
+# A theme-type extension's shopify.extension.toml is intentionally flat — NO
+# `[[extensions]]` table wrapper and NO `api_version` key. Those only apply to
+# `type = "ui_extension"` / `type = "function"` extensions. The documented
+# minimal example is exactly:
+#   name = "my-theme-app-extension"
+#   type = "theme"
+# (This file previously lived at extensions/aeo-theme-ext/extension.toml, which
+# is not a filename Shopify CLI recognizes — pre-July-2023 theme extensions used
+# `shopify.theme.extension.toml`, and post-July-2023 ones use
+# `shopify.extension.toml`. Never bare `extension.toml`.)
+
+name = "Hatchloop AEO Schema"
+type = "theme"
+handle = "hatchloop-aeo-schema"

@@ -4,14 +4,23 @@
  * (1) Generates concrete Organization + Product JSON-LD from the store's real
  *     data (mock stub in MOCK mode) so the merchant sees and can validate the
  *     exact markup AI/Google will read.
- * (2) Installs a dynamic Liquid snippet into an UNPUBLISHED theme via
- *     themeFilesUpsert (live-theme writes are intentionally NOT attempted), and
- *     best-effort wires it into that theme's layout/theme.liquid <head>.
+ * (2) PRIMARY install path: a deep link into the theme editor's "App embeds"
+ *     panel to turn on the bundled Theme App Extension block
+ *     (extensions/aeo-theme-ext/blocks/aeo-schema.liquid). This works for
+ *     EVERY merchant on any Online Store 2.0 theme — no Shopify theme-access
+ *     exemption required, no Admin API theme write needed.
+ * (3) FALLBACK install paths, for merchants who can't/won't use the app embed
+ *     (e.g. a vintage theme without app-embed support): a copy-paste Liquid
+ *     snippet, and a one-click install into an UNPUBLISHED theme via
+ *     themeFilesUpsert (live-theme writes are intentionally NOT attempted;
+ *     best-effort wiring into that theme's layout/theme.liquid <head>).
+ *     themeFilesUpsert requires write_themes AND a Shopify theme-access
+ *     exemption most merchants don't have, so this degrades gracefully: if the
+ *     platform denies the write, the merchant still has the copy-paste
+ *     snippet and — the recommended path — the app embed above.
  *
- * themeFilesUpsert requires write_themes AND a Shopify theme-access exemption, so
- * the install action degrades gracefully: if the platform denies the write, the
- * merchant still has the copy-paste snippet + the bundled Theme App Extension
- * (which needs no exemption).
+ * Do NOT enable both the app embed AND the snippet (either path) on the same
+ * theme — that renders duplicate JSON-LD on the same page. Pick one.
  */
 import { json } from '@remix-run/node';
 import { useLoaderData, useNavigation, useActionData, Form } from '@remix-run/react';
@@ -25,6 +34,7 @@ import { fetchCatalog, mockCatalog } from '../engine/catalog.server.js';
 import {
   buildOrganizationJsonLd, buildProductJsonLd, buildSchemaLiquidSnippet,
   schemaCoverageSummary, SNIPPET_FILENAME, RENDER_TAG, RENDER_MARKER,
+  buildThemeEditorEmbedDeepLink, APP_EMBED_BLOCK_NAME,
 } from '../engine/schema.server.js';
 
 const SAMPLE_PRODUCTS = 12;
@@ -101,6 +111,7 @@ export async function loader({ request }) {
   const coverage = schemaCoverageSummary({ shop: catalog.shop, products: catalog.products });
 
   const installable = themes.filter((t) => t.role === 'UNPUBLISHED');
+  const embedDeepLink = buildThemeEditorEmbedDeepLink({ shop });
 
   return json({
     isMock: IS_MOCK,
@@ -115,6 +126,8 @@ export async function loader({ request }) {
     themes,
     installable,
     hasUnpublished: installable.length > 0,
+    embedDeepLink,
+    embedBlockName: APP_EMBED_BLOCK_NAME,
   });
 }
 
@@ -275,6 +288,7 @@ export default function SchemaPage() {
   const {
     isMock, fetchError, orgJson, productJson, sampleTitle, coverage,
     snippet, snippetFilename, renderTag, installable, hasUnpublished,
+    embedDeepLink, embedBlockName,
   } = useLoaderData();
   const actionData = useActionData();
   const nav = useNavigation();
@@ -312,6 +326,55 @@ export default function SchemaPage() {
         {fetchError && (
           <Banner tone="critical" title="Could not read the catalog"><p>{fetchError}</p></Banner>
         )}
+
+        {/* PRIMARY install path: theme app extension app embed */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" blockAlign="center">
+              <Text as="h2" variant="headingMd">Recommended: turn on the app embed</Text>
+              <Badge tone="success">No exemption needed</Badge>
+            </InlineStack>
+            <Text as="p" variant="bodySm" tone="subdued">
+              Hatchloop ships a <strong>Theme App Extension</strong> — an app embed block
+              called &ldquo;{embedBlockName}&rdquo; — that injects Organization, Product, and
+              Breadcrumb JSON-LD directly, without editing any theme files. It works on{' '}
+              <strong>every</strong> Online Store 2.0 theme for every merchant, unlike the
+              write-to-theme options below which need a Shopify theme-access exemption most
+              stores don&apos;t have.
+            </Text>
+            <InlineStack gap="200">
+              <Button
+                variant="primary"
+                url={embedDeepLink}
+                target="_blank"
+                disabled={isMock}
+              >
+                Open theme editor → enable app embed
+              </Button>
+            </InlineStack>
+            {isMock && (
+              <Text as="p" variant="bodySm" tone="subdued">
+                Disabled in MOCK mode (no real theme to open). On a real store this opens{' '}
+                <code>{embedDeepLink}</code>.
+              </Text>
+            )}
+            <List type="number">
+              <List.Item>Click the button — it opens your live theme editor with the App embeds panel open.</List.Item>
+              <List.Item>Find &ldquo;{embedBlockName}&rdquo; in the list and toggle it ON.</List.Item>
+              <List.Item>Click Save. Structured data starts rendering immediately — no publish step for a live theme&apos;s embeds.</List.Item>
+            </List>
+            <Banner tone="info" title="Already have Product or Organization schema?">
+              <p>
+                The app embed has its own settings (visible when you click into the block in the
+                theme editor) to turn OFF Product, Organization, or Breadcrumb schema
+                individually. If your theme or a reviews/SEO app already outputs one of these
+                types, turn the matching toggle off there to avoid duplicate JSON-LD on the same
+                page — we can&apos;t detect that automatically from a theme extension, so please
+                check your page source first.
+              </p>
+            </Banner>
+          </BlockStack>
+        </Card>
 
         {/* Coverage summary */}
         <Card>
@@ -358,16 +421,22 @@ export default function SchemaPage() {
           </Banner>
         )}
 
-        {/* Install to theme */}
+        {/* Fallback install path #1: write the snippet into an unpublished theme */}
         <Card>
           <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">Install to your storefront</Text>
+            <InlineStack gap="200" blockAlign="center">
+              <Text as="h2" variant="headingMd">Fallback: write the snippet to an unpublished theme</Text>
+              <Badge tone="attention">Needs a theme-access exemption</Badge>
+            </InlineStack>
             <Text as="p" variant="bodySm" tone="subdued">
-              Writes a dynamic Liquid snippet (<code>{snippetFilename}</code>) to an{' '}
-              <strong>unpublished</strong> theme and wires it into the theme&apos;s{' '}
-              <code>&lt;head&gt;</code>. It renders the right Organization + Product +
-              BreadcrumbList schema on every page. Review it there, then publish the theme
-              when you&apos;re happy — the live theme is never touched by this app.
+              Only use this if the app embed above doesn&apos;t fit — for example a vintage
+              theme without app-embed support. Writes a dynamic Liquid snippet
+              (<code>{snippetFilename}</code>) to an <strong>unpublished</strong> theme and wires
+              it into the theme&apos;s <code>&lt;head&gt;</code>. It renders the same
+              Organization + Product + BreadcrumbList schema on every page. Review it there, then
+              publish the theme when you&apos;re happy — the live theme is never touched by this
+              app. Don&apos;t combine this with the app embed on the same theme, or you&apos;ll
+              ship duplicate JSON-LD.
             </Text>
 
             {actionData?.ok && (
@@ -421,16 +490,17 @@ export default function SchemaPage() {
           </BlockStack>
         </Card>
 
-        {/* Copy-paste fallback */}
+        {/* Fallback install path #2: manual copy-paste */}
         <Card>
           <BlockStack gap="300">
             <InlineStack align="space-between" blockAlign="center">
-              <Text as="h2" variant="headingMd">Snippet (copy-paste fallback)</Text>
+              <Text as="h2" variant="headingMd">Fallback: snippet (copy-paste by hand)</Text>
               <Button onClick={copySnippet} size="slim">{snippetCopied ? 'Copied ✓' : 'Copy snippet'}</Button>
             </InlineStack>
             <Text as="p" variant="bodySm" tone="subdued">
-              Prefer to do it by hand? Create <code>{snippetFilename}</code> in your theme and
-              add <code>{renderTag}</code> to <code>layout/theme.liquid</code> before{' '}
+              Last resort if you can&apos;t use the app embed above and don&apos;t want to grant
+              the theme-write install a try. Create <code>{snippetFilename}</code> in your theme
+              and add <code>{renderTag}</code> to <code>layout/theme.liquid</code> before{' '}
               <code>&lt;/head&gt;</code>.
             </Text>
             <Box background="bg-surface-secondary" borderRadius="200" padding="300" overflowX="scroll">
@@ -445,8 +515,9 @@ export default function SchemaPage() {
             <List type="bullet">
               <List.Item>
                 <Text as="span" variant="bodySm">
-                  Already using the bundled <strong>Theme App Extension</strong>? That block does the
-                  same job with no exemption — enable it in the theme editor instead.
+                  Use only ONE install path per theme — the app embed, the unpublished-theme
+                  install, or this manual snippet. Combining more than one duplicates JSON-LD on
+                  the same page, which can confuse search engines and AI crawlers.
                 </Text>
               </List.Item>
             </List>
