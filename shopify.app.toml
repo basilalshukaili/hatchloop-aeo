@@ -44,11 +44,18 @@ api_version = "2026-01"
   topics = ["products/create", "products/update"]
   uri = "/webhooks/products-update"
 
-  # GDPR/privacy compliance webhooks (NOT configurable via TOML — CLI 4.6.1 confirmed):
-  # Set these manually in Partner Dashboard → Apps → Hatchloop AEO → Configuration → Privacy/GDPR:
-  #   Customer data request URL = https://hatchloop-aeo.onrender.com/webhooks/customers-data-request
-  #   Customer data erasure URL = https://hatchloop-aeo.onrender.com/webhooks/customers-redact
-  #   Shop data erasure URL     = https://hatchloop-aeo.onrender.com/webhooks/shop-redact
+  # GDPR/privacy compliance webhooks — declared via compliance_topics (CLI 3.x+ schema):
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request"]
+  uri = "/webhooks/customers-data-request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/redact"]
+  uri = "/webhooks/customers-redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["shop/redact"]
+  uri = "/webhooks/shop-redact"
 
 # App Proxy — serves the generated llms.txt on the STORE's own domain so AI
 # crawlers reach it at a real storefront URL:
