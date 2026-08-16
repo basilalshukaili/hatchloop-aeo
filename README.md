@@ -156,14 +156,13 @@ No fabricated scores. The public scan numbers are always real.
 
 ## Wiring the billing tiers
 
-The `getTier(shop)` function in `app/engine/aeo.server.js` currently returns `'free'`
-by default. To activate Starter/Pro tiers:
-
-1. Wire Shopify Billing API in `app/routes/app.billing.jsx` (the WIRE POINT comment
-   shows the exact pattern).
-2. After a successful subscription, write the tier to the DB (add a `Subscription`
-   model to `prisma/schema.prisma`).
-3. Update `getTier()` to query that DB record.
+`getTier(shop, request)` in `app/engine/aeo.server.js` (thin wrapper around
+`resolveTier(request)`) is wired to real billing: in real mode (`IS_MOCK` false) it
+calls `checkBilling(request)` from `app/shopify.server.js`, which authenticates the
+request and asks Shopify's `billing.check()` for an ACTIVE subscription on that shop.
+`FORCE_TIER` still overrides for local dev/testing, and mock mode always resolves to
+`'free'`. Every gated route MUST pass `request` (not just `shop`) into `getTier()` —
+`shop` alone has no session behind it.
 
 The gating logic in `gateFixes()` (and the Pro citation route) is already in place.
 

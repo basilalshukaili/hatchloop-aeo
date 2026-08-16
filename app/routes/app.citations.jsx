@@ -18,7 +18,7 @@ import { getTier } from '../engine/aeo.server.js';
 
 export async function loader({ request }) {
   const shop = getShopFromRequest(request);
-  const tier = await getTier(shop);
+  const tier = await getTier(shop, request);
 
   if (tier !== 'pro') {
     return json({ authorized: false, tier });

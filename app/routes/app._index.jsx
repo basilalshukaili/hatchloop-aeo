@@ -41,7 +41,7 @@ export async function loader({ request }) {
     admin = auth.admin;
     shop = auth.session.shop;
   }
-  const tier = await getTier(shop);
+  const tier = await getTier(shop, request);
 
   // Always run the public scan (no auth required)
   let publicReport = null;

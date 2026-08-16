@@ -11469,6 +11469,19 @@ async function requestBilling(request, planId) {
     headers: { "Content-Type": "application/json" }
   });
 }
+async function checkBilling(request) {
+  if (IS_MOCK)
+    return { tier: "free" };
+  try {
+    let { authenticate: authenticate2, BILLING_PLANS: BILLING_PLANS2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports)), { billing } = await authenticate2.admin(request), { appSubscriptions } = await billing.check({
+      plans: Object.values(BILLING_PLANS2),
+      isTest: !1
+    }), active = appSubscriptions.find((s) => s.status === "ACTIVE");
+    return active ? active.name === BILLING_PLANS2.pro ? { tier: "pro" } : active.name === BILLING_PLANS2.starter ? { tier: "starter" } : { tier: "free" } : { tier: "free" };
+  } catch {
+    return { tier: "free" };
+  }
+}
 
 // app/root.jsx
 import { jsx as jsx2, jsxs } from "react/jsx-runtime";
@@ -11649,9 +11662,26 @@ async function runAuthenticatedScan({ adminGraphqlFn, publicReport = null, sampl
     sample
   });
 }
-async function getTier(shop) {
-  let forced = process.env.FORCE_TIER;
-  return forced && ["free", "starter", "pro"].includes(forced) ? forced : "free";
+var _tierCache = /* @__PURE__ */ new WeakMap();
+async function resolveTier(request) {
+  if (request && _tierCache.has(request))
+    return _tierCache.get(request);
+  let forced = process.env.FORCE_TIER, tier;
+  if (forced && ["free", "starter", "pro"].includes(forced))
+    tier = forced;
+  else if (IS_MOCK)
+    tier = "free";
+  else
+    try {
+      let result = await checkBilling(request);
+      tier = result && ["free", "starter", "pro"].includes(result.tier) ? result.tier : "free";
+    } catch {
+      tier = "free";
+    }
+  return request && _tierCache.set(request, tier), tier;
+}
+async function getTier(shop, request) {
+  return resolveTier(request);
 }
 function gateFixes(allFixes, tier) {
   return tier === "free" ? { visible: allFixes.slice(0, 3), locked: Math.max(0, allFixes.length - 3) } : { visible: allFixes, locked: 0 };
@@ -11734,7 +11764,7 @@ ${productContext}` }
   return text2.trim();
 }
 async function loader2({ request }) {
-  let shop = getShopFromRequest(request), tier = await getTier(shop), products = [], fetchError = null;
+  let shop = getShopFromRequest(request), tier = await getTier(shop, request), products = [], fetchError = null;
   if (IS_MOCK)
     products = MOCK_PRODUCTS;
   else
@@ -11774,7 +11804,7 @@ async function action6({ request }) {
     let auth = await authenticateAdmin(request);
     admin = auth.admin, shop = auth.session.shop;
   }
-  let tier = await getTier(shop), formData = await request.formData(), intent = formData.get("intent"), productId = formData.get("productId"), productTitle = formData.get("productTitle"), productType = formData.get("productType") || "", vendor = formData.get("vendor") || "", tags = (formData.get("tags") || "").split(",").filter(Boolean);
+  let tier = await getTier(shop, request), formData = await request.formData(), intent = formData.get("intent"), productId = formData.get("productId"), productTitle = formData.get("productTitle"), productType = formData.get("productType") || "", vendor = formData.get("vendor") || "", tags = (formData.get("tags") || "").split(",").filter(Boolean);
   if (intent === "generate") {
     let limitMsg = _genRateLimit(shop);
     if (limitMsg)
@@ -11975,7 +12005,7 @@ import { json as json8 } from "@remix-run/node";
 import { useLoaderData as useLoaderData3 } from "@remix-run/react";
 import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 async function loader3({ request }) {
-  let shop = getShopFromRequest(request), tier = await getTier(shop);
+  let shop = getShopFromRequest(request), tier = await getTier(shop, request);
   return tier !== "pro" ? json8({ authorized: !1, tier }) : json8({
     authorized: !0,
     tier,
@@ -12778,7 +12808,7 @@ async function loader6({ request }) {
     let auth = await authenticateAdmin(request);
     admin = auth.admin, shop = auth.session.shop;
   }
-  let tier = await getTier(shop), publicReport = null, publicError = null, deepReport = null, deepError = null, targetUrl = IS_MOCK ? process.env.MOCK_SCAN_URL || "https://allbirds.com" : `https://${shop}`;
+  let tier = await getTier(shop, request), publicReport = null, publicError = null, deepReport = null, deepError = null, targetUrl = IS_MOCK ? process.env.MOCK_SCAN_URL || "https://allbirds.com" : `https://${shop}`;
   try {
     publicReport = await runPublicScan(targetUrl);
   } catch (e) {
@@ -13365,7 +13395,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-2XYXQDY3.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-QO3KZ3YU.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-CW7XPTZH.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-D56LC7R7.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "0d3c8ed0", hmr: void 0, url: "/build/manifest-0D3C8ED0.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HU2L7AMW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-P72LUO6O.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-XJYDZSJX.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-D56LC7R7.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "e35ea943", hmr: void 0, url: "/build/manifest-E35EA943.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {

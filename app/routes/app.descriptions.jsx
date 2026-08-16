@@ -131,7 +131,7 @@ Return ONLY the description text, no preamble, no HTML tags.`,
 // ── Loader ────────────────────────────────────────────────────────────────────
 export async function loader({ request }) {
   const shop = getShopFromRequest(request);
-  const tier = await getTier(shop);
+  const tier = await getTier(shop, request);
 
   let products = [];
   let fetchError = null;
@@ -205,7 +205,7 @@ export async function action({ request }) {
     admin = auth.admin;
     shop = auth.session.shop;
   }
-  const tier = await getTier(shop);
+  const tier = await getTier(shop, request);
   const formData = await request.formData();
   const intent = formData.get('intent');
   const productId = formData.get('productId');

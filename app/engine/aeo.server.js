@@ -13,6 +13,7 @@
  */
 
 import { createRequire } from 'module';
+import { IS_MOCK, checkBilling } from '../shopify.server.js';
 const require = createRequire(import.meta.url);
 
 // Engine roots, VENDORED into this repo at <root>/engine-lib/ so they deploy with
@@ -119,20 +120,58 @@ export async function runAuthenticatedScan({ adminGraphqlFn, publicReport = null
 
 // ── Tier gating helpers ───────────────────────────────────────────────────────
 /**
- * getTier(shop, session) -> 'free' | 'starter' | 'pro'
+ * resolveTier(request) -> 'free' | 'starter' | 'pro'
  *
- * SCAFFOLD: In production this reads the active Shopify Billing subscription
- * from the DB or from a Shopify Billing API call. For now it returns 'free'
- * unless overridden by the FORCE_TIER env var (dev convenience).
+ * Single source of truth for what a shop is entitled to see. Resolution order:
+ *   1. FORCE_TIER env var — dev override, works in both mock and real mode.
+ *   2. MOCK mode (IS_MOCK) — always 'free' (billing is not wired in mock; see
+ *      checkBilling() in shopify.server.js, which itself returns { tier: 'free' }
+ *      in mock mode — kept here too so mock never depends on a live request).
+ *   3. REAL mode — calls checkBilling(request), which authenticates the request
+ *      and queries Shopify's real billing.check() for an ACTIVE subscription.
+ *      Falls back to 'free' on ANY error (unauthenticated request, no active
+ *      subscription, Shopify API failure, etc.) — never throws, never upgrades
+ *      a merchant by accident.
  *
- * WIRE POINT: Replace the body of this function with a real DB/billing lookup
- * before launch.
+ * Cached per-request (WeakMap keyed on the Request object) so a single
+ * loader/action that gates multiple sections only calls checkBilling() once.
  */
-export async function getTier(shop) {
+const _tierCache = new WeakMap();
+
+export async function resolveTier(request) {
+  if (request && _tierCache.has(request)) return _tierCache.get(request);
+
   const forced = process.env.FORCE_TIER;
-  if (forced && ['free', 'starter', 'pro'].includes(forced)) return forced;
-  // TODO: query DB for active billing subscription for `shop`
-  return 'free'; // default until billing is wired
+  let tier;
+  if (forced && ['free', 'starter', 'pro'].includes(forced)) {
+    tier = forced;
+  } else if (IS_MOCK) {
+    tier = 'free';
+  } else {
+    try {
+      const result = await checkBilling(request);
+      tier = (result && ['free', 'starter', 'pro'].includes(result.tier)) ? result.tier : 'free';
+    } catch {
+      tier = 'free';
+    }
+  }
+
+  if (request) _tierCache.set(request, tier);
+  return tier;
+}
+
+/**
+ * getTier(shop, request) -> 'free' | 'starter' | 'pro'
+ *
+ * Kept as the call-site name every route already uses. `shop` is accepted for
+ * signature compatibility (routes have it on hand) but is intentionally unused:
+ * resolving the tier from `shop` alone (a bare string with no session behind
+ * it) was the original pay-and-get-nothing bug — there was nothing to look up.
+ * The tier is now always derived from the authenticated `request` via
+ * resolveTier()/checkBilling(). Every gated route MUST pass `request`.
+ */
+export async function getTier(shop, request) {
+  return resolveTier(request);
 }
 
 // ── Fix-list gating ───────────────────────────────────────────────────────────
