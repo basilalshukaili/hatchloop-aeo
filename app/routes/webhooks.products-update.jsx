@@ -8,8 +8,14 @@
  */
 
 import { json } from '@remix-run/node';
+import { verifyWebhookRequest } from '../webhooks.verify.server.js';
 
 export async function action({ request }) {
+  const { valid } = await verifyWebhookRequest(request);
+  if (!valid) {
+    return json({ ok: false, error: 'invalid hmac' }, 401);
+  }
+
   const topic = request.headers.get('X-Shopify-Topic');
   const shop = request.headers.get('X-Shopify-Shop-Domain');
 

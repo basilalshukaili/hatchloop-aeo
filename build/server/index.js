@@ -11515,15 +11515,34 @@ __export(webhooks_customers_data_request_exports, {
   action: () => action
 });
 import { json as json2 } from "@remix-run/node";
+
+// app/webhooks.verify.server.js
+import crypto from "node:crypto";
+async function verifyWebhookRequest(request) {
+  let secret = process.env.SHOPIFY_API_SECRET || "", header = request.headers.get("X-Shopify-Hmac-Sha256") || "", raw = Buffer.from(await request.arrayBuffer());
+  if (!secret || !header)
+    return { valid: !1, body: null };
+  let digest = crypto.createHmac("sha256", secret).update(raw).digest("base64"), a = Buffer.from(digest, "utf8"), b = Buffer.from(header, "utf8");
+  if (!(a.length === b.length && crypto.timingSafeEqual(a, b)))
+    return { valid: !1, body: null };
+  let body = null;
+  try {
+    body = JSON.parse(raw.toString("utf8"));
+  } catch {
+    body = null;
+  }
+  return { valid: !0, body };
+}
+
+// app/routes/webhooks.customers-data-request.jsx
 async function action({ request }) {
+  let { valid, body } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json2({ ok: !1, error: "invalid hmac" }, 401);
   if (request.headers.get("X-Shopify-Topic") !== "customers/data_request")
     return json2({ ok: !1, error: "wrong topic" }, 400);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  if (!body)
     return json2({ ok: !1, error: "invalid body" }, 400);
-  }
   let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
   return console.log(`[webhook] customers/data_request \u2014 shop: ${shop}, customer: ${customer}`), json2({ ok: !0 });
 }
@@ -11535,14 +11554,13 @@ __export(webhooks_customers_redact_exports, {
 });
 import { json as json3 } from "@remix-run/node";
 async function action2({ request }) {
+  let { valid, body } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json3({ ok: !1, error: "invalid hmac" }, 401);
   if (request.headers.get("X-Shopify-Topic") !== "customers/redact")
     return json3({ ok: !1, error: "wrong topic" }, 400);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  if (!body)
     return json3({ ok: !1, error: "invalid body" }, 400);
-  }
   let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
   return console.log(`[webhook] customers/redact \u2014 shop: ${shop}, customer: ${customer}`), json3({ ok: !0 });
 }
@@ -11554,14 +11572,13 @@ __export(webhooks_app_uninstalled_exports, {
 });
 import { json as json4 } from "@remix-run/node";
 async function action3({ request }) {
+  let { valid, body } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json4({ ok: !1, error: "invalid hmac" }, 401);
   if (request.headers.get("X-Shopify-Topic") !== "app/uninstalled")
     return json4({ ok: !1, error: "wrong topic" }, 400);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  if (!body)
     return json4({ ok: !1, error: "invalid body" }, 400);
-  }
   let shop = body.domain || body.myshopify_domain;
   return console.log(`[webhook] app/uninstalled for shop: ${shop}`), json4({ ok: !0 });
 }
@@ -11573,6 +11590,9 @@ __export(webhooks_products_update_exports, {
 });
 import { json as json5 } from "@remix-run/node";
 async function action4({ request }) {
+  let { valid } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json5({ ok: !1, error: "invalid hmac" }, 401);
   let topic = request.headers.get("X-Shopify-Topic"), shop = request.headers.get("X-Shopify-Shop-Domain");
   return ["products/create", "products/update"].includes(topic) ? (console.log(`[webhook] ${topic} for shop: ${shop} \u2014 invalidating scan cache`), json5({ ok: !0 })) : json5({ ok: !1, error: "wrong topic" }, 400);
 }
@@ -11584,14 +11604,13 @@ __export(webhooks_shop_redact_exports, {
 });
 import { json as json6 } from "@remix-run/node";
 async function action5({ request }) {
+  let { valid, body } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json6({ ok: !1, error: "invalid hmac" }, 401);
   if (request.headers.get("X-Shopify-Topic") !== "shop/redact")
     return json6({ ok: !1, error: "wrong topic" }, 400);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  if (!body)
     return json6({ ok: !1, error: "invalid body" }, 400);
-  }
   let shop = body.shop_domain;
   return console.log(`[webhook] shop/redact \u2014 shop: ${shop}`), json6({ ok: !0 });
 }

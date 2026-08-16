@@ -7,17 +7,20 @@
  */
 
 import { json } from '@remix-run/node';
+import { verifyWebhookRequest } from '../webhooks.verify.server.js';
 
 export async function action({ request }) {
+  const { valid, body } = await verifyWebhookRequest(request);
+  if (!valid) {
+    return json({ ok: false, error: 'invalid hmac' }, 401);
+  }
+
   const topic = request.headers.get('X-Shopify-Topic');
   if (topic !== 'customers/data_request') {
     return json({ ok: false, error: 'wrong topic' }, 400);
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  if (!body) {
     return json({ ok: false, error: 'invalid body' }, 400);
   }
 
