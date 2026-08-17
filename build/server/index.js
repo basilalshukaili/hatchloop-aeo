@@ -11713,7 +11713,8 @@ var THIN_THRESHOLD = 50, FREE_TIER_LIMIT = 3, MAX_PRODUCTS_FETCHED = 50, MOCK_PR
   { id: "gid://shopify/Product/2", title: "Trail Backpack 40L", descriptionHtml: "Good bag." },
   { id: "gid://shopify/Product/3", title: "Merino Wool Socks", descriptionHtml: "" },
   { id: "gid://shopify/Product/4", title: "Hydration Vest", descriptionHtml: "Nice vest." },
-  { id: "gid://shopify/Product/5", title: "Trekking Poles", descriptionHtml: "" }
+  { id: "gid://shopify/Product/5", title: "Trekking Poles", descriptionHtml: "" },
+  { id: "gid://shopify/Product/6", title: "Alpine Down Jacket", descriptionHtml: "<p>Lightweight 800-fill goose down jacket with a ripstop nylon shell. Water-resistant DWR coating, two zip pockets, packs into its own left pocket. Weighs 285 grams in size medium.</p>" }
 ], PRODUCTS_QUERY = `
   query GetThinProducts($first: Int!) {
     products(first: $first, query: "status:ACTIVE") {
@@ -11745,11 +11746,13 @@ async function generateDescription(product) {
   let apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey)
     throw new Error("DEEPSEEK_API_KEY is not set in environment");
-  let productContext = [
+  let isRewrite = !!(product.existingDescription && product.existingDescription.trim()), productContext = [
     `Product: ${product.title}`,
     product.productType ? `Type: ${product.productType}` : null,
     product.vendor ? `Brand: ${product.vendor}` : null,
-    product.tags?.length ? `Tags: ${product.tags.join(", ")}` : null
+    product.tags?.length ? `Tags: ${product.tags.join(", ")}` : null,
+    isRewrite ? `Existing description (rewrite this, keep every factual claim \u2014 materials, sizes, counts, origins \u2014 exactly as stated):
+${product.existingDescription.trim().slice(0, 1200)}` : null
   ].filter(Boolean).join(`
 `), res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
@@ -11768,9 +11771,10 @@ Write compelling, accurate product descriptions that:
 - Use active voice and sensory language
 - End with a subtle call-to-action
 - Avoid filler phrases like "introducing" or "featuring"
+When an existing description is provided, REWRITE it: preserve every factual claim (materials, dimensions, counts, origins, care instructions) exactly; improve clarity, keyword coverage, and AI-readability; never invent product facts that are not in the existing text.
 Return ONLY the description text, no preamble, no HTML tags.`
         },
-        { role: "user", content: `Write a product description for:
+        { role: "user", content: `${isRewrite ? "Rewrite the product description for" : "Write a product description for"}:
 ${productContext}` }
       ]
     })
@@ -11797,16 +11801,16 @@ async function loader2({ request }) {
     } catch (e) {
       fetchError = e.message;
     }
-  let thinProducts = products.filter(
-    (p) => (p.descriptionHtml || "").replace(/<[^>]*>/g, "").trim().length < THIN_THRESHOLD
-  ), isFree = tier === "free", visible = isFree ? thinProducts.slice(0, FREE_TIER_LIMIT) : thinProducts, lockedCount = isFree ? Math.max(0, thinProducts.length - FREE_TIER_LIMIT) : 0;
+  let mode2 = new URL(request.url).searchParams.get("mode") === "all" ? "all" : "thin", descLen = (p) => (p.descriptionHtml || "").replace(/<[^>]*>/g, "").trim().length, thinProducts = products.filter((p) => descLen(p) < THIN_THRESHOLD), pool = mode2 === "all" ? [...products].sort((a, b) => descLen(a) - descLen(b)) : thinProducts, isFree = tier === "free", visible = isFree ? pool.slice(0, FREE_TIER_LIMIT) : pool, lockedCount = isFree ? Math.max(0, pool.length - FREE_TIER_LIMIT) : 0;
   return json7({
     shop,
     tier,
     isMock: IS_MOCK,
+    mode: mode2,
     products: visible,
     lockedCount,
     totalThin: thinProducts.length,
+    totalAll: products.length,
     fetchError
   });
 }
@@ -11823,7 +11827,7 @@ async function action6({ request }) {
     let auth = await authenticateAdmin(request);
     admin = auth.admin, shop = auth.session.shop;
   }
-  let tier = await getTier(shop, request), formData = await request.formData(), intent = formData.get("intent"), productId = formData.get("productId"), productTitle = formData.get("productTitle"), productType = formData.get("productType") || "", vendor = formData.get("vendor") || "", tags = (formData.get("tags") || "").split(",").filter(Boolean);
+  let tier = await getTier(shop, request), formData = await request.formData(), intent = formData.get("intent"), productId = formData.get("productId"), productTitle = formData.get("productTitle"), productType = formData.get("productType") || "", vendor = formData.get("vendor") || "", tags = (formData.get("tags") || "").split(",").filter(Boolean), existingDescription = formData.get("existingDescription") || "";
   if (intent === "generate") {
     let limitMsg = _genRateLimit(shop);
     if (limitMsg)
@@ -11833,7 +11837,8 @@ async function action6({ request }) {
         title: productTitle,
         productType,
         vendor,
-        tags
+        tags,
+        existingDescription
       });
       return json7({ ok: !0, intent: "generate", productId, description });
     } catch (e) {
@@ -11869,11 +11874,17 @@ function stripHtml(html) {
 }
 function ProductRow({ product, isMock }) {
   let fetcher = useFetcher(), isGenerating = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "generate", isWriting = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "write", generated = fetcher.data?.intent === "generate" && fetcher.data?.ok ? fetcher.data.description : null, written = fetcher.data?.intent === "write" && fetcher.data?.ok, genError = fetcher.data?.intent === "generate" && !fetcher.data?.ok ? fetcher.data.error : null, writeError = fetcher.data?.intent === "write" && !fetcher.data?.ok ? fetcher.data.error : null, currentDesc = stripHtml(product.descriptionHtml), descLength = currentDesc.length, statusBadge;
-  return written ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "success", children: "Written" }) : generated ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "attention", children: "Preview ready" }) : descLength === 0 ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "critical", children: "Blank" }) : statusBadge = /* @__PURE__ */ jsxs2(Badge, { tone: "warning", children: [
+  written ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "success", children: "Written" }) : generated ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "attention", children: "Preview ready" }) : descLength === 0 ? statusBadge = /* @__PURE__ */ jsx3(Badge, { tone: "critical", children: "Blank" }) : descLength < THIN_THRESHOLD ? statusBadge = /* @__PURE__ */ jsxs2(Badge, { tone: "warning", children: [
     "Thin (",
     descLength,
     " chars)"
-  ] }), /* @__PURE__ */ jsxs2(BlockStack, { gap: "200", children: [
+  ] }) : statusBadge = /* @__PURE__ */ jsxs2(Badge, { tone: "info", children: [
+    "Has description (",
+    descLength,
+    " chars)"
+  ] });
+  let isRewrite = descLength >= THIN_THRESHOLD;
+  return /* @__PURE__ */ jsxs2(BlockStack, { gap: "200", children: [
     /* @__PURE__ */ jsxs2(InlineStack, { align: "space-between", blockAlign: "center", children: [
       /* @__PURE__ */ jsxs2(BlockStack, { gap: "100", children: [
         /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodyMd", fontWeight: "medium", children: product.title }),
@@ -11893,7 +11904,8 @@ function ProductRow({ product, isMock }) {
           /* @__PURE__ */ jsx3("input", { type: "hidden", name: "productType", value: product.productType || "" }),
           /* @__PURE__ */ jsx3("input", { type: "hidden", name: "vendor", value: product.vendor || "" }),
           /* @__PURE__ */ jsx3("input", { type: "hidden", name: "tags", value: (product.tags || []).join(",") }),
-          /* @__PURE__ */ jsx3(Button, { submit: !0, loading: isGenerating, size: "slim", children: isGenerating ? "Generating\u2026" : generated ? "Re-generate" : "Generate" })
+          /* @__PURE__ */ jsx3("input", { type: "hidden", name: "existingDescription", value: isRewrite ? currentDesc : "" }),
+          /* @__PURE__ */ jsx3(Button, { submit: !0, loading: isGenerating, size: "slim", children: isGenerating ? isRewrite ? "Rewriting\u2026" : "Generating\u2026" : generated ? isRewrite ? "Re-rewrite" : "Re-generate" : isRewrite ? "Rewrite" : "Generate" })
         ] }),
         generated && !written && /* @__PURE__ */ jsxs2(fetcher.Form, { method: "post", children: [
           /* @__PURE__ */ jsx3("input", { type: "hidden", name: "intent", value: "write" }),
@@ -11924,12 +11936,12 @@ function ProductRow({ product, isMock }) {
   ] });
 }
 function DescriptionsPage() {
-  let { products, lockedCount, totalThin, tier, isMock, fetchError } = useLoaderData2(), isLoading = useNavigation().state !== "idle";
+  let { products, lockedCount, totalThin, totalAll, mode: mode2, tier, isMock, fetchError } = useLoaderData2(), isLoading = useNavigation().state !== "idle", isAllMode = mode2 === "all";
   return /* @__PURE__ */ jsx3(
     Page,
     {
       title: "AI Product Descriptions",
-      subtitle: "Auto-generate SEO-optimized descriptions for products with thin or blank copy",
+      subtitle: "Generate copy for blank products \u2014 or rewrite existing descriptions for AI search",
       backAction: { content: "Dashboard", url: "/app" },
       children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "400", children: [
         isMock && /* @__PURE__ */ jsx3(Banner, { tone: "warning", title: "Scaffold / MOCK mode", children: /* @__PURE__ */ jsxs2("p", { children: [
@@ -11963,15 +11975,17 @@ function DescriptionsPage() {
           ] }) }) })
         ] }),
         /* @__PURE__ */ jsx3(Card, { children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "400", children: [
-          /* @__PURE__ */ jsxs2(InlineStack, { align: "space-between", children: [
-            /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: "Products needing descriptions" }),
-            isLoading && /* @__PURE__ */ jsx3(Spinner, { size: "small" })
+          /* @__PURE__ */ jsxs2(InlineStack, { align: "space-between", blockAlign: "center", children: [
+            /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: isAllMode ? "All products" : "Products needing descriptions" }),
+            /* @__PURE__ */ jsxs2(InlineStack, { gap: "200", blockAlign: "center", children: [
+              isLoading && /* @__PURE__ */ jsx3(Spinner, { size: "small" }),
+              /* @__PURE__ */ jsxs2(ButtonGroup, { variant: "segmented", children: [
+                /* @__PURE__ */ jsx3(Button, { size: "slim", pressed: !isAllMode, url: "/app/descriptions", children: `Thin & blank (${totalThin})` }),
+                /* @__PURE__ */ jsx3(Button, { size: "slim", pressed: isAllMode, url: "/app/descriptions?mode=all", children: `All products (${totalAll})` })
+              ] })
+            ] })
           ] }),
-          products.length === 0 && !fetchError && /* @__PURE__ */ jsx3(Banner, { tone: "success", title: "All descriptions look good", children: /* @__PURE__ */ jsxs2("p", { children: [
-            "No products found with thin or blank descriptions (under ",
-            THIN_THRESHOLD,
-            " characters). Check back after adding new products."
-          ] }) }),
+          products.length === 0 && !fetchError && /* @__PURE__ */ jsx3(Banner, { tone: "success", title: "All descriptions look good", children: /* @__PURE__ */ jsx3("p", { children: isAllMode ? "No products found in your catalog yet. Check back after adding products." : `No products found with thin or blank descriptions (under ${THIN_THRESHOLD} characters). Switch to "All products" to rewrite existing descriptions for AI search.` }) }),
           products.map((product, i) => /* @__PURE__ */ jsxs2(BlockStack, { gap: "0", children: [
             i > 0 && /* @__PURE__ */ jsx3(Divider, {}),
             /* @__PURE__ */ jsx3(Box, { padding: "300", children: /* @__PURE__ */ jsx3(ProductRow, { product, isMock }) })
@@ -13414,7 +13428,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-UG35XA4B.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-LXGTL763.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HU2L7AMW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-UBDRB3G7.js", imports: ["/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-P72LUO6O.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-XJYDZSJX.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-NVR7MVO4.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-D56LC7R7.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-55KLXMGZ.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "e35ea943", hmr: void 0, url: "/build/manifest-E35EA943.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-COTMUB7P.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-TEXT622D.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HHO6BOSQ.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-6CNJSAXU.js", imports: ["/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-CAKZUWEW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-HOOE72DC.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-JSCA32FC.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-QWFOT2YG.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "4dbda1d5", hmr: void 0, url: "/build/manifest-4DBDA1D5.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {

@@ -27,7 +27,7 @@ import { json } from '@remix-run/node';
 import { useLoaderData, useNavigation, useFetcher } from '@remix-run/react';
 import {
   Page, Layout, Card, Text, BlockStack, InlineStack, Badge,
-  Button, Banner, DataTable, Spinner, Divider, Box,
+  Button, ButtonGroup, Banner, DataTable, Spinner, Divider, Box,
 } from '@shopify/polaris';
 import { authenticateAdmin, getShopFromRequest, IS_MOCK } from '../shopify.server.js';
 import { getTier } from '../engine/aeo.server.js';
@@ -44,6 +44,7 @@ const MOCK_PRODUCTS = [
   { id: 'gid://shopify/Product/3', title: 'Merino Wool Socks', descriptionHtml: '' },
   { id: 'gid://shopify/Product/4', title: 'Hydration Vest', descriptionHtml: 'Nice vest.' },
   { id: 'gid://shopify/Product/5', title: 'Trekking Poles', descriptionHtml: '' },
+  { id: 'gid://shopify/Product/6', title: 'Alpine Down Jacket', descriptionHtml: '<p>Lightweight 800-fill goose down jacket with a ripstop nylon shell. Water-resistant DWR coating, two zip pockets, packs into its own left pocket. Weighs 285 grams in size medium.</p>' },
 ];
 
 // ── Admin GraphQL helpers ─────────────────────────────────────────────────────
@@ -89,11 +90,14 @@ async function generateDescription(product) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY is not set in environment');
 
+  const isRewrite = !!(product.existingDescription && product.existingDescription.trim());
+
   const productContext = [
     `Product: ${product.title}`,
     product.productType ? `Type: ${product.productType}` : null,
     product.vendor ? `Brand: ${product.vendor}` : null,
     product.tags?.length ? `Tags: ${product.tags.join(', ')}` : null,
+    isRewrite ? `Existing description (rewrite this, keep every factual claim — materials, sizes, counts, origins — exactly as stated):\n${product.existingDescription.trim().slice(0, 1200)}` : null,
   ].filter(Boolean).join('\n');
 
   // Budget: deepseek-chat ~$0.00014/1k tokens; 600-token call ≈ $0.00008 — well under $0.003 cap.
@@ -114,9 +118,10 @@ Write compelling, accurate product descriptions that:
 - Use active voice and sensory language
 - End with a subtle call-to-action
 - Avoid filler phrases like "introducing" or "featuring"
+When an existing description is provided, REWRITE it: preserve every factual claim (materials, dimensions, counts, origins, care instructions) exactly; improve clarity, keyword coverage, and AI-readability; never invent product facts that are not in the existing text.
 Return ONLY the description text, no preamble, no HTML tags.`,
         },
-        { role: 'user', content: `Write a product description for:\n${productContext}` },
+        { role: 'user', content: `${isRewrite ? 'Rewrite the product description for' : 'Write a product description for'}:\n${productContext}` },
       ],
     }),
   });
@@ -153,23 +158,30 @@ export async function loader({ request }) {
     }
   }
 
-  // Filter to thin/blank descriptions only
-  const thinProducts = products.filter(
-    (p) => (p.descriptionHtml || '').replace(/<[^>]*>/g, '').trim().length < THIN_THRESHOLD
-  );
+  // mode=thin (default): blank/thin only. mode=all: every product — existing
+  // descriptions become rewrite candidates (thin listed first so the biggest
+  // gaps stay on top).
+  const mode = new URL(request.url).searchParams.get('mode') === 'all' ? 'all' : 'thin';
+  const descLen = (p) => (p.descriptionHtml || '').replace(/<[^>]*>/g, '').trim().length;
+  const thinProducts = products.filter((p) => descLen(p) < THIN_THRESHOLD);
+  const pool = mode === 'all'
+    ? [...products].sort((a, b) => descLen(a) - descLen(b))
+    : thinProducts;
 
   // Tier gating: Free sees first 3 only
   const isFree = tier === 'free';
-  const visible = isFree ? thinProducts.slice(0, FREE_TIER_LIMIT) : thinProducts;
-  const lockedCount = isFree ? Math.max(0, thinProducts.length - FREE_TIER_LIMIT) : 0;
+  const visible = isFree ? pool.slice(0, FREE_TIER_LIMIT) : pool;
+  const lockedCount = isFree ? Math.max(0, pool.length - FREE_TIER_LIMIT) : 0;
 
   return json({
     shop,
     tier,
     isMock: IS_MOCK,
+    mode,
     products: visible,
     lockedCount,
     totalThin: thinProducts.length,
+    totalAll: products.length,
     fetchError,
   });
 }
@@ -213,6 +225,7 @@ export async function action({ request }) {
   const productType = formData.get('productType') || '';
   const vendor = formData.get('vendor') || '';
   const tags = (formData.get('tags') || '').split(',').filter(Boolean);
+  const existingDescription = formData.get('existingDescription') || '';
 
   // ── Generate: call AI and return the text (no write yet) ──
   if (intent === 'generate') {
@@ -226,6 +239,7 @@ export async function action({ request }) {
         productType,
         vendor,
         tags,
+        existingDescription,
       });
       return json({ ok: true, intent: 'generate', productId, description });
     } catch (e) {
@@ -303,9 +317,12 @@ function ProductRow({ product, isMock }) {
     statusBadge = <Badge tone="attention">Preview ready</Badge>;
   } else if (descLength === 0) {
     statusBadge = <Badge tone="critical">Blank</Badge>;
-  } else {
+  } else if (descLength < THIN_THRESHOLD) {
     statusBadge = <Badge tone="warning">Thin ({descLength} chars)</Badge>;
+  } else {
+    statusBadge = <Badge tone="info">Has description ({descLength} chars)</Badge>;
   }
+  const isRewrite = descLength >= THIN_THRESHOLD;
 
   return (
     <BlockStack gap="200">
@@ -330,8 +347,13 @@ function ProductRow({ product, isMock }) {
               <input type="hidden" name="productType" value={product.productType || ''} />
               <input type="hidden" name="vendor" value={product.vendor || ''} />
               <input type="hidden" name="tags" value={(product.tags || []).join(',')} />
+              <input type="hidden" name="existingDescription" value={isRewrite ? currentDesc : ''} />
               <Button submit loading={isGenerating} size="slim">
-                {isGenerating ? 'Generating…' : generated ? 'Re-generate' : 'Generate'}
+                {isGenerating
+                  ? (isRewrite ? 'Rewriting…' : 'Generating…')
+                  : generated
+                    ? (isRewrite ? 'Re-rewrite' : 'Re-generate')
+                    : (isRewrite ? 'Rewrite' : 'Generate')}
               </Button>
             </fetcher.Form>
           )}
@@ -383,14 +405,15 @@ function ProductRow({ product, isMock }) {
 
 // ── Page component ────────────────────────────────────────────────────────────
 export default function DescriptionsPage() {
-  const { products, lockedCount, totalThin, tier, isMock, fetchError } = useLoaderData();
+  const { products, lockedCount, totalThin, totalAll, mode, tier, isMock, fetchError } = useLoaderData();
   const nav = useNavigation();
   const isLoading = nav.state !== 'idle';
+  const isAllMode = mode === 'all';
 
   return (
     <Page
       title="AI Product Descriptions"
-      subtitle="Auto-generate SEO-optimized descriptions for products with thin or blank copy"
+      subtitle="Generate copy for blank products — or rewrite existing descriptions for AI search"
       backAction={{ content: 'Dashboard', url: '/app' }}
     >
       <BlockStack gap="400">
@@ -458,18 +481,29 @@ export default function DescriptionsPage() {
         {/* Product list */}
         <Card>
           <BlockStack gap="400">
-            <InlineStack align="space-between">
+            <InlineStack align="space-between" blockAlign="center">
               <Text as="h2" variant="headingMd">
-                Products needing descriptions
+                {isAllMode ? 'All products' : 'Products needing descriptions'}
               </Text>
-              {isLoading && <Spinner size="small" />}
+              <InlineStack gap="200" blockAlign="center">
+                {isLoading && <Spinner size="small" />}
+                <ButtonGroup variant="segmented">
+                  <Button size="slim" pressed={!isAllMode} url="/app/descriptions">
+                    {`Thin & blank (${totalThin})`}
+                  </Button>
+                  <Button size="slim" pressed={isAllMode} url="/app/descriptions?mode=all">
+                    {`All products (${totalAll})`}
+                  </Button>
+                </ButtonGroup>
+              </InlineStack>
             </InlineStack>
 
             {products.length === 0 && !fetchError && (
               <Banner tone="success" title="All descriptions look good">
                 <p>
-                  No products found with thin or blank descriptions (under {THIN_THRESHOLD} characters).
-                  Check back after adding new products.
+                  {isAllMode
+                    ? 'No products found in your catalog yet. Check back after adding products.'
+                    : `No products found with thin or blank descriptions (under ${THIN_THRESHOLD} characters). Switch to "All products" to rewrite existing descriptions for AI search.`}
                 </p>
               </Banner>
             )}
