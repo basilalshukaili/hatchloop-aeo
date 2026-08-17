@@ -11629,6 +11629,7 @@ __export(app_descriptions_exports, {
 });
 import { json as json7 } from "@remix-run/node";
 import { useLoaderData as useLoaderData2, useNavigation, useFetcher } from "@remix-run/react";
+import { useState as useState17 } from "react";
 
 // app/engine/aeo.server.js
 import { createRequire } from "module";
@@ -11824,6 +11825,14 @@ function _genRateLimit(shop) {
   let now = Date.now(), recent = (_genLog.get(shop) || []).filter((t) => now - t < GEN_WINDOW_MS);
   return recent.length >= GEN_MAX ? "Too many generations in a short time. Please wait a few minutes and try again." : (recent.push(now), _genLog.set(shop, recent), null);
 }
+function _genRateLimitBulk(shop, count) {
+  let now = Date.now(), recent = (_genLog.get(shop) || []).filter((t) => now - t < GEN_WINDOW_MS);
+  if (recent.length + count > GEN_MAX)
+    return `Too many generations: ${count} would exceed the ${GEN_MAX}/10-min limit. Wait a few minutes and try again.`;
+  for (let i = 0; i < count; i++)
+    recent.push(now);
+  return _genLog.set(shop, recent), null;
+}
 async function action6({ request }) {
   let shop, admin = null;
   if (IS_MOCK)
@@ -11871,6 +11880,79 @@ async function action6({ request }) {
     } catch (e) {
       return json7({ ok: !1, intent: "write", productId, error: e.message }, { status: 500 });
     }
+  }
+  if (intent === "bulk_fix") {
+    let thinPool = [], descLen = (p) => (p.descriptionHtml || "").replace(/<[^>]*>/g, "").trim().length;
+    if (IS_MOCK)
+      thinPool = MOCK_PRODUCTS.filter((p) => descLen(p) < THIN_THRESHOLD);
+    else
+      try {
+        thinPool = ((await (await admin.graphql(PRODUCTS_QUERY, { variables: { first: MAX_PRODUCTS_FETCHED } })).json()).data?.products?.edges ?? []).map((e) => e.node).filter((p) => descLen(p) < THIN_THRESHOLD);
+      } catch (e) {
+        return json7({ ok: !1, intent: "bulk_fix", error: `Could not fetch products: ${e.message}` }, { status: 500 });
+      }
+    let BATCH_SIZE = tier === "free" ? 3 : 10, batch = thinPool.slice(0, BATCH_SIZE);
+    if (batch.length === 0)
+      return json7({ ok: !0, intent: "bulk_fix", results: [], done: 0, total: 0, remaining: 0 });
+    let limitMsg = _genRateLimitBulk(shop, batch.length);
+    if (limitMsg)
+      return json7({ ok: !1, intent: "bulk_fix", error: limitMsg }, { status: 429 });
+    let results = [];
+    for (let product of batch)
+      try {
+        let description = await generateDescription({
+          title: product.title,
+          productType: product.productType,
+          vendor: product.vendor,
+          tags: product.tags,
+          existingDescription: ""
+        });
+        results.push({ productId: product.id, title: product.title, ok: !0, description });
+      } catch (e) {
+        results.push({ productId: product.id, title: product.title, ok: !1, error: e.message });
+      }
+    let done = results.filter((r) => r.ok).length, remaining = Math.max(0, thinPool.length - batch.length);
+    return json7({ ok: !0, intent: "bulk_fix", results, done, total: batch.length, remaining });
+  }
+  if (intent === "bulk_publish") {
+    let approved;
+    try {
+      approved = JSON.parse(formData.get("approved") || "[]");
+    } catch {
+      return json7({ ok: !1, intent: "bulk_publish", error: "Could not read the approved list." }, { status: 400 });
+    }
+    if (!Array.isArray(approved) || approved.length === 0)
+      return json7({ ok: !1, intent: "bulk_publish", error: "Nothing approved to publish." }, { status: 400 });
+    if (approved.length > 25)
+      return json7({ ok: !1, intent: "bulk_publish", error: "Too many at once \u2014 publish in smaller batches." }, { status: 400 });
+    let written = [];
+    for (let item of approved) {
+      let pid = item && item.productId, desc = item && item.description;
+      if (!(!pid || !desc))
+        try {
+          if (!IS_MOCK) {
+            let userErrors = (await (await admin.graphql(PRODUCT_UPDATE_MUTATION, {
+              variables: {
+                input: {
+                  id: pid,
+                  descriptionHtml: `<p>${String(desc).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br />")}</p>`
+                }
+              }
+            })).json()).data?.productUpdate?.userErrors ?? [];
+            if (userErrors.length)
+              throw new Error(userErrors.map((e) => e.message).join("; "));
+          }
+          written.push({ productId: pid, title: item.title, ok: !0 });
+        } catch (e) {
+          written.push({ productId: pid, title: item.title, ok: !1, error: e.message });
+        }
+    }
+    return json7({
+      ok: !0,
+      intent: "bulk_publish",
+      results: written,
+      done: written.filter((w) => w.ok).length
+    });
   }
   return json7({ ok: !1, error: "Unknown intent" }, { status: 400 });
 }
@@ -11940,6 +12022,75 @@ function ProductRow({ product, isMock }) {
     writeError && /* @__PURE__ */ jsx3(Banner, { tone: "critical", title: "Save failed", children: /* @__PURE__ */ jsx3("p", { children: writeError }) })
   ] });
 }
+function BulkFixPanel({ products, tier, isMock }) {
+  let fetcher = useFetcher(), [dismissed, setDismissed] = useState17(!1), isFree = tier === "free", batchSize = isFree ? 3 : 10, isRunning = fetcher.state !== "idle", submittedIntent = fetcher.formData?.get("intent"), previewResult = fetcher.data?.intent === "bulk_fix" ? fetcher.data : null, publishResult = fetcher.data?.intent === "bulk_publish" ? fetcher.data : null, previews = (previewResult?.results || []).filter((r) => r.ok && r.description), failed = (previewResult?.results || []).filter((r) => !r.ok), isPublished = publishResult?.ok && publishResult?.done > 0, bulkError = fetcher.data && fetcher.data.ok === !1 ? fetcher.data.error : null;
+  return dismissed ? null : /* @__PURE__ */ jsx3(Card, { children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "300", children: [
+    /* @__PURE__ */ jsxs2(InlineStack, { align: "space-between", blockAlign: "start", children: [
+      /* @__PURE__ */ jsxs2(BlockStack, { gap: "100", children: [
+        /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: "Fix All \u2014 Generate, Review, Publish" }),
+        /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+          "AI writes descriptions for up to ",
+          batchSize,
+          " blank products at once. You read them all on this page and publish with one click \u2014 nothing reaches your storefront until you approve it.",
+          isFree && " Upgrade to Starter to process 10 at a time."
+        ] })
+      ] }),
+      !isRunning && !isPublished && previews.length === 0 && /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+        "~$",
+        (Math.min(products.length, batchSize) * 2e-4).toFixed(4),
+        " estimated cost"
+      ] })
+    ] }),
+    isRunning && /* @__PURE__ */ jsxs2(BlockStack, { gap: "200", children: [
+      /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", tone: "subdued", children: submittedIntent === "bulk_publish" ? "Publishing approved descriptions\u2026" : "Writing descriptions for review\u2026" }),
+      /* @__PURE__ */ jsx3(ProgressBar, { progress: 0, size: "small", tone: "primary", animated: !0 })
+    ] }),
+    isPublished && /* @__PURE__ */ jsx3(
+      Banner,
+      {
+        tone: "success",
+        title: `${publishResult.done} description${publishResult.done > 1 ? "s" : ""} published to your store`,
+        onDismiss: () => setDismissed(!0),
+        children: publishResult.results?.filter((r) => !r.ok).length > 0 && /* @__PURE__ */ jsxs2("p", { children: [
+          "Failed: ",
+          publishResult.results.filter((r) => !r.ok).map((r) => r.title).join(", ")
+        ] })
+      }
+    ),
+    bulkError && /* @__PURE__ */ jsx3(Banner, { tone: "critical", title: "Bulk generation failed", children: /* @__PURE__ */ jsx3("p", { children: bulkError }) }),
+    !isRunning && !isPublished && previews.length > 0 && /* @__PURE__ */ jsxs2(BlockStack, { gap: "300", children: [
+      /* @__PURE__ */ jsx3(Banner, { tone: "info", title: `${previews.length} description${previews.length > 1 ? "s" : ""} ready for your review`, children: /* @__PURE__ */ jsx3("p", { children: "Nothing has been published yet. Read them below, then publish." }) }),
+      previews.map((p) => /* @__PURE__ */ jsx3(Box, { background: "bg-surface-secondary", borderRadius: "100", padding: "300", children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "100", children: [
+        /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", fontWeight: "medium", children: p.title }),
+        /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", children: p.description })
+      ] }) }, p.productId)),
+      failed.length > 0 && /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
+        "Skipped: ",
+        failed.map((r) => r.title).join(", ")
+      ] }),
+      /* @__PURE__ */ jsxs2(InlineStack, { gap: "200", children: [
+        /* @__PURE__ */ jsxs2(fetcher.Form, { method: "post", children: [
+          /* @__PURE__ */ jsx3("input", { type: "hidden", name: "intent", value: "bulk_publish" }),
+          /* @__PURE__ */ jsx3("input", { type: "hidden", name: "approved", value: JSON.stringify(previews.map((p) => ({ productId: p.productId, title: p.title, description: p.description }))) }),
+          /* @__PURE__ */ jsx3(Button, { submit: !0, tone: "success", loading: isRunning, children: isMock ? `Publish all ${previews.length} (mock)` : `Publish all ${previews.length} to my store` })
+        ] }),
+        /* @__PURE__ */ jsx3(Button, { onClick: () => setDismissed(!0), children: "Discard" })
+      ] })
+    ] }),
+    !isRunning && !isPublished && previews.length === 0 && /* @__PURE__ */ jsxs2(fetcher.Form, { method: "post", children: [
+      /* @__PURE__ */ jsx3("input", { type: "hidden", name: "intent", value: "bulk_fix" }),
+      /* @__PURE__ */ jsx3(Button, { submit: !0, loading: isRunning, tone: "success", disabled: isRunning, children: `Generate ${Math.min(products.length, batchSize)} descriptions for review` })
+    ] }),
+    isPublished && previewResult?.remaining > 0 && /* @__PURE__ */ jsxs2(fetcher.Form, { method: "post", children: [
+      /* @__PURE__ */ jsx3("input", { type: "hidden", name: "intent", value: "bulk_fix" }),
+      /* @__PURE__ */ jsxs2(Button, { submit: !0, loading: isRunning, tone: "success", children: [
+        "Generate next ",
+        Math.min(previewResult.remaining, batchSize),
+        " for review"
+      ] })
+    ] })
+  ] }) });
+}
 function DescriptionsPage() {
   let { products, lockedCount, totalThin, totalAll, mode: mode2, tier, isMock, fetchError } = useLoaderData2(), isLoading = useNavigation().state !== "idle", isAllMode = mode2 === "all";
   return /* @__PURE__ */ jsx3(
@@ -11964,17 +12115,23 @@ function DescriptionsPage() {
             /* @__PURE__ */ jsx3(Badge, { tone: tier === "free" ? "attention" : "success", children: tier === "free" ? "Free \u2014 first 3 shown" : tier === "starter" ? "Starter" : "Pro" })
           ] }) }) }),
           /* @__PURE__ */ jsx3(Layout.Section, { children: /* @__PURE__ */ jsx3(Card, { children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "200", children: [
-            /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: "How it works" }),
+            /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: "Two ways to fix descriptions" }),
+            /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", fontWeight: "medium", children: "Option A \u2014 Fix All (fastest)" }),
             /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-              "1. Click ",
-              /* @__PURE__ */ jsx3("strong", { children: "Generate" }),
-              " \u2014 Hatchloop AEO uses AI to write an 80-150 word, keyword-rich description tailored to each product."
+              "Scroll down and click ",
+              /* @__PURE__ */ jsx3("strong", { children: "Fix All" }),
+              " \u2014 AI writes and saves descriptions for up to ",
+              tier === "free" ? 3 : 10,
+              " products instantly. No clicking per product."
             ] }),
-            /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", tone: "subdued", children: "2. Review the preview below the product row." }),
+            /* @__PURE__ */ jsx3(Divider, {}),
+            /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", fontWeight: "medium", children: "Option B \u2014 One at a time" }),
             /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-              "3. Click ",
-              /* @__PURE__ */ jsx3("strong", { children: "Accept & Save" }),
-              " to push the description live to your Shopify store via the Admin API."
+              "Click ",
+              /* @__PURE__ */ jsx3("strong", { children: "Generate" }),
+              " on any product to preview the AI description, then",
+              /* @__PURE__ */ jsx3("strong", { children: " Accept & Save" }),
+              " to push it live. Full control, one product at a time."
             ] }),
             /* @__PURE__ */ jsx3(Text, { as: "p", variant: "bodySm", tone: "subdued", children: "Cost: ~$0.0002 per description (max $0.003 cap per generation)." })
           ] }) }) })
@@ -12012,22 +12169,7 @@ function DescriptionsPage() {
             )
           ] })
         ] }) }),
-        tier !== "free" && products.length > 1 && /* @__PURE__ */ jsx3(Card, { children: /* @__PURE__ */ jsxs2(BlockStack, { gap: "200", children: [
-          /* @__PURE__ */ jsx3(Text, { as: "h2", variant: "headingMd", children: "Bulk generation" }),
-          /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "Generate descriptions for all ",
-            products.length,
-            " thin products at once. Each description is previewed before being saved \u2014 you stay in control."
-          ] }),
-          /* @__PURE__ */ jsxs2(Text, { as: "p", variant: "bodySm", tone: "subdued", children: [
-            "Estimated cost: ~$",
-            (products.length * 2e-4).toFixed(4),
-            " for ",
-            products.length,
-            " descriptions."
-          ] }),
-          /* @__PURE__ */ jsx3(Banner, { tone: "info", title: "Coming soon", children: /* @__PURE__ */ jsx3("p", { children: "Bulk generation with a single click is on the roadmap. For now, generate each product individually using the buttons above." }) })
-        ] }) })
+        products.length > 1 && /* @__PURE__ */ jsx3(BulkFixPanel, { products, tier, isMock })
       ] })
     }
   );
@@ -12218,7 +12360,7 @@ __export(app_schema_exports, {
 });
 import { json as json10 } from "@remix-run/node";
 import { useLoaderData as useLoaderData5, useNavigation as useNavigation2, useActionData, Form as Form2 } from "@remix-run/react";
-import { useCallback as useCallback19, useState as useState17 } from "react";
+import { useCallback as useCallback19, useState as useState18 } from "react";
 
 // app/engine/catalog.server.js
 var CATALOG_QUERY = `
@@ -12625,7 +12767,7 @@ async function action8({ request }) {
   });
 }
 function JsonBlock({ title, value, badge }) {
-  let [copied, setCopied] = useState17(!1), copy = useCallback19(() => {
+  let [copied, setCopied] = useState18(!1), copy = useCallback19(() => {
     typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(value).then(() => {
       setCopied(!0), setTimeout(() => setCopied(!1), 1600);
     });
@@ -12664,7 +12806,7 @@ function SchemaPage() {
     hasUnpublished,
     embedDeepLink,
     embedBlockName
-  } = useLoaderData5(), actionData = useActionData(), nav = useNavigation2(), installing = nav.state !== "idle" && nav.formData?.get("intent") === "install", [themeId, setThemeId] = useState17(installable[0]?.id || ""), [snippetCopied, setSnippetCopied] = useState17(!1), copySnippet = useCallback19(() => {
+  } = useLoaderData5(), actionData = useActionData(), nav = useNavigation2(), installing = nav.state !== "idle" && nav.formData?.get("intent") === "install", [themeId, setThemeId] = useState18(installable[0]?.id || ""), [snippetCopied, setSnippetCopied] = useState18(!1), copySnippet = useCallback19(() => {
     typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(snippet).then(() => {
       setSnippetCopied(!0), setTimeout(() => setSnippetCopied(!1), 1600);
     });
@@ -13241,7 +13383,7 @@ __export(app_llms_exports, {
 });
 import { json as json12 } from "@remix-run/node";
 import { useLoaderData as useLoaderData7, useNavigation as useNavigation4, Form as Form4 } from "@remix-run/react";
-import { useCallback as useCallback20, useState as useState18 } from "react";
+import { useCallback as useCallback20, useState as useState19 } from "react";
 import { jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
 var LLMS_MAX_PRODUCTS2 = 150;
 async function loader8({ request }) {
@@ -13281,7 +13423,7 @@ async function action10() {
   return json12({ ok: !0 });
 }
 function LlmsPage() {
-  let { isMock, llmsTxt, bytes, counts, proxyUrl, fetchError } = useLoaderData7(), busy = useNavigation4().state !== "idle", [copied, setCopied] = useState18(!1), copy = useCallback20(() => {
+  let { isMock, llmsTxt, bytes, counts, proxyUrl, fetchError } = useLoaderData7(), busy = useNavigation4().state !== "idle", [copied, setCopied] = useState19(!1), copy = useCallback20(() => {
     typeof navigator < "u" && navigator.clipboard && navigator.clipboard.writeText(llmsTxt).then(() => {
       setCopied(!0), setTimeout(() => setCopied(!1), 1800);
     });
@@ -13433,7 +13575,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-SWSGM3MR.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-TEXT622D.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HHO6BOSQ.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-6CNJSAXU.js", imports: ["/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-CAKZUWEW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-HOOE72DC.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-JSCA32FC.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-QWFOT2YG.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "c430a90f", hmr: void 0, url: "/build/manifest-C430A90F.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-SWSGM3MR.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-TEXT622D.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HHO6BOSQ.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-6CNJSAXU.js", imports: ["/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-CAKZUWEW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-Y534ACU7.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-JSCA32FC.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-QWFOT2YG.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "7cf314fd", hmr: void 0, url: "/build/manifest-7CF314FD.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {

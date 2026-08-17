@@ -322,6 +322,11 @@ export async function action({ request }) {
       return json({ ok: false, intent: 'bulk_fix', error: limitMsg }, { status: 429 });
     }
 
+    // GENERATE ONLY — never write here. The listing and every sales surface
+    // promise "you approve before anything publishes"; bulk generation returns
+    // previews and the merchant publishes them with the separate bulk_publish
+    // intent below. (An earlier revision wrote straight to the live store —
+    // that contradicted the promise and is why this split exists.)
     const results = [];
     for (const product of batch) {
       try {
@@ -332,20 +337,7 @@ export async function action({ request }) {
           tags: product.tags,
           existingDescription: '',
         });
-        if (!IS_MOCK) {
-          const writeRes = await admin.graphql(PRODUCT_UPDATE_MUTATION, {
-            variables: {
-              input: {
-                id: product.id,
-                descriptionHtml: `<p>${description.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br />')}</p>`,
-              },
-            },
-          });
-          const writeData = await writeRes.json();
-          const userErrors = writeData.data?.productUpdate?.userErrors ?? [];
-          if (userErrors.length) throw new Error(userErrors.map((e) => e.message).join('; '));
-        }
-        results.push({ productId: product.id, title: product.title, ok: true });
+        results.push({ productId: product.id, title: product.title, ok: true, description });
       } catch (e) {
         results.push({ productId: product.id, title: product.title, ok: false, error: e.message });
       }
@@ -354,6 +346,53 @@ export async function action({ request }) {
     const done = results.filter((r) => r.ok).length;
     const remaining = Math.max(0, thinPool.length - batch.length);
     return json({ ok: true, intent: 'bulk_fix', results, done, total: batch.length, remaining });
+  }
+
+  // ── Bulk publish: write ONLY the previews the merchant approved ──
+  if (intent === 'bulk_publish') {
+    let approved;
+    try {
+      approved = JSON.parse(formData.get('approved') || '[]');
+    } catch {
+      return json({ ok: false, intent: 'bulk_publish', error: 'Could not read the approved list.' }, { status: 400 });
+    }
+    if (!Array.isArray(approved) || approved.length === 0) {
+      return json({ ok: false, intent: 'bulk_publish', error: 'Nothing approved to publish.' }, { status: 400 });
+    }
+    if (approved.length > 25) {
+      return json({ ok: false, intent: 'bulk_publish', error: 'Too many at once — publish in smaller batches.' }, { status: 400 });
+    }
+
+    const written = [];
+    for (const item of approved) {
+      const pid = item && item.productId;
+      const desc = item && item.description;
+      if (!pid || !desc) continue;
+      try {
+        if (!IS_MOCK) {
+          const writeRes = await admin.graphql(PRODUCT_UPDATE_MUTATION, {
+            variables: {
+              input: {
+                id: pid,
+                descriptionHtml: `<p>${String(desc).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br />')}</p>`,
+              },
+            },
+          });
+          const writeData = await writeRes.json();
+          const userErrors = writeData.data?.productUpdate?.userErrors ?? [];
+          if (userErrors.length) throw new Error(userErrors.map((e) => e.message).join('; '));
+        }
+        written.push({ productId: pid, title: item.title, ok: true });
+      } catch (e) {
+        written.push({ productId: pid, title: item.title, ok: false, error: e.message });
+      }
+    }
+    return json({
+      ok: true,
+      intent: 'bulk_publish',
+      results: written,
+      done: written.filter((w) => w.ok).length,
+    });
   }
 
   return json({ ok: false, error: 'Unknown intent' }, { status: 400 });
@@ -488,9 +527,14 @@ function BulkFixPanel({ products, tier, isMock }) {
   const isFree = tier === 'free';
   const batchSize = isFree ? 3 : 10;
   const isRunning = fetcher.state !== 'idle';
-  const result = fetcher.data?.intent === 'bulk_fix' ? fetcher.data : null;
-  const isDone = result?.ok && result?.done > 0;
-  const bulkError = result?.ok === false ? result.error : null;
+  const submittedIntent = fetcher.formData?.get('intent');
+  // Previews awaiting the merchant's approval (bulk_fix never writes).
+  const previewResult = fetcher.data?.intent === 'bulk_fix' ? fetcher.data : null;
+  const publishResult = fetcher.data?.intent === 'bulk_publish' ? fetcher.data : null;
+  const previews = (previewResult?.results || []).filter((r) => r.ok && r.description);
+  const failed = (previewResult?.results || []).filter((r) => !r.ok);
+  const isPublished = publishResult?.ok && publishResult?.done > 0;
+  const bulkError = (fetcher.data && fetcher.data.ok === false) ? fetcher.data.error : null;
 
   if (dismissed) return null;
 
@@ -499,13 +543,13 @@ function BulkFixPanel({ products, tier, isMock }) {
       <BlockStack gap="300">
         <InlineStack align="space-between" blockAlign="start">
           <BlockStack gap="100">
-            <Text as="h2" variant="headingMd">Fix All — Generate &amp; Save in One Click</Text>
+            <Text as="h2" variant="headingMd">Fix All — Generate, Review, Publish</Text>
             <Text as="p" variant="bodySm" tone="subdued">
-              AI writes descriptions for up to {batchSize} blank products at once and saves them directly to your store — no per-product clicking.
+              AI writes descriptions for up to {batchSize} blank products at once. You read them all on this page and publish with one click — nothing reaches your storefront until you approve it.
               {isFree && ' Upgrade to Starter to process 10 at a time.'}
             </Text>
           </BlockStack>
-          {!isRunning && !isDone && (
+          {!isRunning && !isPublished && previews.length === 0 && (
             <Text as="p" variant="bodySm" tone="subdued">
               ~${(Math.min(products.length, batchSize) * 0.0002).toFixed(4)} estimated cost
             </Text>
@@ -514,57 +558,78 @@ function BulkFixPanel({ products, tier, isMock }) {
 
         {isRunning && (
           <BlockStack gap="200">
-            <Text as="p" variant="bodySm" tone="subdued">Generating and saving descriptions…</Text>
+            <Text as="p" variant="bodySm" tone="subdued">
+              {submittedIntent === 'bulk_publish' ? 'Publishing approved descriptions…' : 'Writing descriptions for review…'}
+            </Text>
             <ProgressBar progress={0} size="small" tone="primary" animated />
           </BlockStack>
         )}
 
-        {isDone && (
+        {isPublished && (
           <Banner
             tone="success"
-            title={`${result.done} description${result.done > 1 ? 's' : ''} written to your store`}
+            title={`${publishResult.done} description${publishResult.done > 1 ? 's' : ''} published to your store`}
             onDismiss={() => setDismissed(true)}
           >
-            {result.remaining > 0 && (
-              <p>{result.remaining} more thin products remain. Click again to process the next batch.</p>
-            )}
-            {result.results?.filter((r) => !r.ok).length > 0 && (
-              <p>
-                Skipped: {result.results.filter((r) => !r.ok).map((r) => r.title).join(', ')}
-              </p>
+            {publishResult.results?.filter((r) => !r.ok).length > 0 && (
+              <p>Failed: {publishResult.results.filter((r) => !r.ok).map((r) => r.title).join(', ')}</p>
             )}
           </Banner>
         )}
 
         {bulkError && (
-          <Banner tone="critical" title="Bulk fix failed">
+          <Banner tone="critical" title="Bulk generation failed">
             <p>{bulkError}</p>
           </Banner>
         )}
 
-        {!isDone && (
+        {/* Previews — nothing is live yet */}
+        {!isRunning && !isPublished && previews.length > 0 && (
+          <BlockStack gap="300">
+            <Banner tone="info" title={`${previews.length} description${previews.length > 1 ? 's' : ''} ready for your review`}>
+              <p>Nothing has been published yet. Read them below, then publish.</p>
+            </Banner>
+            {previews.map((p) => (
+              <Box key={p.productId} background="bg-surface-secondary" borderRadius="100" padding="300">
+                <BlockStack gap="100">
+                  <Text as="p" variant="bodySm" fontWeight="medium">{p.title}</Text>
+                  <Text as="p" variant="bodySm">{p.description}</Text>
+                </BlockStack>
+              </Box>
+            ))}
+            {failed.length > 0 && (
+              <Text as="p" variant="bodySm" tone="subdued">
+                Skipped: {failed.map((r) => r.title).join(', ')}
+              </Text>
+            )}
+            <InlineStack gap="200">
+              <fetcher.Form method="post">
+                <input type="hidden" name="intent" value="bulk_publish" />
+                <input type="hidden" name="approved" value={JSON.stringify(previews.map((p) => ({ productId: p.productId, title: p.title, description: p.description })))} />
+                <Button submit tone="success" loading={isRunning}>
+                  {isMock ? `Publish all ${previews.length} (mock)` : `Publish all ${previews.length} to my store`}
+                </Button>
+              </fetcher.Form>
+              <Button onClick={() => setDismissed(true)}>Discard</Button>
+            </InlineStack>
+          </BlockStack>
+        )}
+
+        {/* Generate step */}
+        {!isRunning && !isPublished && previews.length === 0 && (
           <fetcher.Form method="post">
             <input type="hidden" name="intent" value="bulk_fix" />
-            <Button
-              submit
-              loading={isRunning}
-              tone="success"
-              disabled={isRunning}
-            >
-              {isRunning
-                ? 'Fixing…'
-                : isMock
-                  ? `Fix All (mock — ${Math.min(products.length, batchSize)} products)`
-                  : `Fix All — Write ${Math.min(products.length, batchSize)} Descriptions Now`}
+            <Button submit loading={isRunning} tone="success" disabled={isRunning}>
+              {`Generate ${Math.min(products.length, batchSize)} descriptions for review`}
             </Button>
           </fetcher.Form>
         )}
 
-        {isDone && result.remaining > 0 && (
+        {isPublished && previewResult?.remaining > 0 && (
           <fetcher.Form method="post">
             <input type="hidden" name="intent" value="bulk_fix" />
             <Button submit loading={isRunning} tone="success">
-              Fix Next {Math.min(result.remaining, batchSize)} Products
+              Generate next {Math.min(previewResult.remaining, batchSize)} for review
             </Button>
           </fetcher.Form>
         )}
