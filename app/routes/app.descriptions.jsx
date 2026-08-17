@@ -25,9 +25,11 @@
  */
 import { json } from '@remix-run/node';
 import { useLoaderData, useNavigation, useFetcher } from '@remix-run/react';
+import { useState } from 'react';
 import {
   Page, Layout, Card, Text, BlockStack, InlineStack, Badge,
   Button, ButtonGroup, Banner, DataTable, Spinner, Divider, Box,
+  ProgressBar,
 } from '@shopify/polaris';
 import { authenticateAdmin, getShopFromRequest, IS_MOCK } from '../shopify.server.js';
 import { getTier } from '../engine/aeo.server.js';
@@ -204,6 +206,17 @@ function _genRateLimit(shop) {
   return null;
 }
 
+function _genRateLimitBulk(shop, count) {
+  const now = Date.now();
+  const recent = (_genLog.get(shop) || []).filter((t) => now - t < GEN_WINDOW_MS);
+  if (recent.length + count > GEN_MAX) {
+    return `Too many generations: ${count} would exceed the ${GEN_MAX}/10-min limit. Wait a few minutes and try again.`;
+  }
+  for (let i = 0; i < count; i++) recent.push(now);
+  _genLog.set(shop, recent);
+  return null;
+}
+
 // ── Action ────────────────────────────────────────────────────────────────────
 export async function action({ request }) {
   // Authenticate FIRST in real mode: only a valid Shopify session can trigger AI
@@ -278,6 +291,69 @@ export async function action({ request }) {
     } catch (e) {
       return json({ ok: false, intent: 'write', productId, error: e.message }, { status: 500 });
     }
+  }
+
+  // ── Bulk fix: generate + auto-write up to 10 thin products in one shot ──
+  if (intent === 'bulk_fix') {
+    // Re-fetch thin products so we always process the real current state
+    let thinPool = [];
+    const descLen = (p) => (p.descriptionHtml || '').replace(/<[^>]*>/g, '').trim().length;
+    if (IS_MOCK) {
+      thinPool = MOCK_PRODUCTS.filter((p) => descLen(p) < THIN_THRESHOLD);
+    } else {
+      try {
+        const res = await admin.graphql(PRODUCTS_QUERY, { variables: { first: MAX_PRODUCTS_FETCHED } });
+        const data = await res.json();
+        const all = (data.data?.products?.edges ?? []).map((e) => e.node);
+        thinPool = all.filter((p) => descLen(p) < THIN_THRESHOLD);
+      } catch (e) {
+        return json({ ok: false, intent: 'bulk_fix', error: `Could not fetch products: ${e.message}` }, { status: 500 });
+      }
+    }
+
+    const BATCH_SIZE = tier === 'free' ? 3 : 10;
+    const batch = thinPool.slice(0, BATCH_SIZE);
+    if (batch.length === 0) {
+      return json({ ok: true, intent: 'bulk_fix', results: [], done: 0, total: 0, remaining: 0 });
+    }
+
+    const limitMsg = _genRateLimitBulk(shop, batch.length);
+    if (limitMsg) {
+      return json({ ok: false, intent: 'bulk_fix', error: limitMsg }, { status: 429 });
+    }
+
+    const results = [];
+    for (const product of batch) {
+      try {
+        const description = await generateDescription({
+          title: product.title,
+          productType: product.productType,
+          vendor: product.vendor,
+          tags: product.tags,
+          existingDescription: '',
+        });
+        if (!IS_MOCK) {
+          const writeRes = await admin.graphql(PRODUCT_UPDATE_MUTATION, {
+            variables: {
+              input: {
+                id: product.id,
+                descriptionHtml: `<p>${description.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br />')}</p>`,
+              },
+            },
+          });
+          const writeData = await writeRes.json();
+          const userErrors = writeData.data?.productUpdate?.userErrors ?? [];
+          if (userErrors.length) throw new Error(userErrors.map((e) => e.message).join('; '));
+        }
+        results.push({ productId: product.id, title: product.title, ok: true });
+      } catch (e) {
+        results.push({ productId: product.id, title: product.title, ok: false, error: e.message });
+      }
+    }
+
+    const done = results.filter((r) => r.ok).length;
+    const remaining = Math.max(0, thinPool.length - batch.length);
+    return json({ ok: true, intent: 'bulk_fix', results, done, total: batch.length, remaining });
   }
 
   return json({ ok: false, error: 'Unknown intent' }, { status: 400 });
@@ -403,6 +479,100 @@ function ProductRow({ product, isMock }) {
   );
 }
 
+// ── Bulk Fix Panel ────────────────────────────────────────────────────────────
+
+function BulkFixPanel({ products, tier, isMock }) {
+  const fetcher = useFetcher();
+  const [dismissed, setDismissed] = useState(false);
+
+  const isFree = tier === 'free';
+  const batchSize = isFree ? 3 : 10;
+  const isRunning = fetcher.state !== 'idle';
+  const result = fetcher.data?.intent === 'bulk_fix' ? fetcher.data : null;
+  const isDone = result?.ok && result?.done > 0;
+  const bulkError = result?.ok === false ? result.error : null;
+
+  if (dismissed) return null;
+
+  return (
+    <Card>
+      <BlockStack gap="300">
+        <InlineStack align="space-between" blockAlign="start">
+          <BlockStack gap="100">
+            <Text as="h2" variant="headingMd">Fix All — Generate &amp; Save in One Click</Text>
+            <Text as="p" variant="bodySm" tone="subdued">
+              AI writes descriptions for up to {batchSize} blank products at once and saves them directly to your store — no per-product clicking.
+              {isFree && ' Upgrade to Starter to process 10 at a time.'}
+            </Text>
+          </BlockStack>
+          {!isRunning && !isDone && (
+            <Text as="p" variant="bodySm" tone="subdued">
+              ~${(Math.min(products.length, batchSize) * 0.0002).toFixed(4)} estimated cost
+            </Text>
+          )}
+        </InlineStack>
+
+        {isRunning && (
+          <BlockStack gap="200">
+            <Text as="p" variant="bodySm" tone="subdued">Generating and saving descriptions…</Text>
+            <ProgressBar progress={0} size="small" tone="primary" animated />
+          </BlockStack>
+        )}
+
+        {isDone && (
+          <Banner
+            tone="success"
+            title={`${result.done} description${result.done > 1 ? 's' : ''} written to your store`}
+            onDismiss={() => setDismissed(true)}
+          >
+            {result.remaining > 0 && (
+              <p>{result.remaining} more thin products remain. Click again to process the next batch.</p>
+            )}
+            {result.results?.filter((r) => !r.ok).length > 0 && (
+              <p>
+                Skipped: {result.results.filter((r) => !r.ok).map((r) => r.title).join(', ')}
+              </p>
+            )}
+          </Banner>
+        )}
+
+        {bulkError && (
+          <Banner tone="critical" title="Bulk fix failed">
+            <p>{bulkError}</p>
+          </Banner>
+        )}
+
+        {!isDone && (
+          <fetcher.Form method="post">
+            <input type="hidden" name="intent" value="bulk_fix" />
+            <Button
+              submit
+              loading={isRunning}
+              tone="success"
+              disabled={isRunning}
+            >
+              {isRunning
+                ? 'Fixing…'
+                : isMock
+                  ? `Fix All (mock — ${Math.min(products.length, batchSize)} products)`
+                  : `Fix All — Write ${Math.min(products.length, batchSize)} Descriptions Now`}
+            </Button>
+          </fetcher.Form>
+        )}
+
+        {isDone && result.remaining > 0 && (
+          <fetcher.Form method="post">
+            <input type="hidden" name="intent" value="bulk_fix" />
+            <Button submit loading={isRunning} tone="success">
+              Fix Next {Math.min(result.remaining, batchSize)} Products
+            </Button>
+          </fetcher.Form>
+        )}
+      </BlockStack>
+    </Card>
+  );
+}
+
 // ── Page component ────────────────────────────────────────────────────────────
 export default function DescriptionsPage() {
   const { products, lockedCount, totalThin, totalAll, mode, tier, isMock, fetchError } = useLoaderData();
@@ -458,17 +628,17 @@ export default function DescriptionsPage() {
           <Layout.Section>
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">How it works</Text>
+                <Text as="h2" variant="headingMd">Two ways to fix descriptions</Text>
+                <Text as="p" variant="bodySm" fontWeight="medium">Option A — Fix All (fastest)</Text>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  1. Click <strong>Generate</strong> — Hatchloop AEO uses AI to write
-                  an 80-150 word, keyword-rich description tailored to each product.
+                  Scroll down and click <strong>Fix All</strong> — AI writes and saves descriptions
+                  for up to {tier === 'free' ? 3 : 10} products instantly. No clicking per product.
                 </Text>
+                <Divider />
+                <Text as="p" variant="bodySm" fontWeight="medium">Option B — One at a time</Text>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  2. Review the preview below the product row.
-                </Text>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  3. Click <strong>Accept &amp; Save</strong> to push the description live to your
-                  Shopify store via the Admin API.
+                  Click <strong>Generate</strong> on any product to preview the AI description, then
+                  <strong> Accept &amp; Save</strong> to push it live. Full control, one product at a time.
                 </Text>
                 <Text as="p" variant="bodySm" tone="subdued">
                   Cost: ~$0.0002 per description (max $0.003 cap per generation).
@@ -536,26 +706,9 @@ export default function DescriptionsPage() {
           </BlockStack>
         </Card>
 
-        {/* Bulk generate CTA (Starter+) */}
-        {tier !== 'free' && products.length > 1 && (
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">Bulk generation</Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                Generate descriptions for all {products.length} thin products at once.
-                Each description is previewed before being saved — you stay in control.
-              </Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                Estimated cost: ~${(products.length * 0.0002).toFixed(4)} for {products.length} descriptions.
-              </Text>
-              <Banner tone="info" title="Coming soon">
-                <p>
-                  Bulk generation with a single click is on the roadmap. For now, generate
-                  each product individually using the buttons above.
-                </p>
-              </Banner>
-            </BlockStack>
-          </Card>
+        {/* Bulk Fix All — Starter+ */}
+        {products.length > 1 && (
+          <BulkFixPanel products={products} tier={tier} isMock={isMock} />
         )}
 
       </BlockStack>
