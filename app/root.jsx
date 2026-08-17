@@ -11,11 +11,15 @@ export const links = () => [
 
 export function loader() {
   // apiKey is public (it is the app Client ID) — safe to expose to the browser.
-  return json({ apiKey: process.env.SHOPIFY_API_KEY || '', isMock: IS_MOCK });
+  return json({
+    apiKey: process.env.SHOPIFY_API_KEY || '',
+    isMock: IS_MOCK,
+    tidioKey: process.env.TIDIO_PUBLIC_KEY || '',
+  });
 }
 
 export default function App() {
-  const { apiKey, isMock } = useLoaderData();
+  const { apiKey, isMock, tidioKey } = useLoaderData();
 
   return (
     <html lang="en">
@@ -37,6 +41,12 @@ export default function App() {
         </AppProvider>
         <ScrollRestoration />
         <Scripts />
+        {/* Tidio support chat (real mode only) — fast human support is the
+            review flywheel: answer quickly, then ask for an App Store review.
+            Public widget key, safe to expose client-side. */}
+        {!isMock && tidioKey ? (
+          <script src={`//code.tidio.co/${tidioKey}.js`} async />
+        ) : null}
       </body>
     </html>
   );
