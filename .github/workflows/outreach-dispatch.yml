@@ -1,0 +1,45 @@
+name: Outreach dispatch (reliable trigger)
+
+# WHY THIS EXISTS
+# The outreach queue is delivered by a Vercel cron on hatchloop.dev. On the
+# Hobby plan those crons are best-effort and have MISSED their window on two
+# consecutive days (2026-08-17 and 2026-08-18), each time needing a manual
+# curl to get the day's emails out. Sends are the money motion and must not
+# depend on someone noticing.
+#
+# This workflow hits the same authenticated endpoint on a schedule. The
+# dispatcher is idempotent — it claims each row with a conditional update and
+# enforces its own per-run and per-day caps — so if the Vercel cron already
+# ran, this call simply finds nothing due and sends nothing. Belt and braces,
+# never double-sends.
+#
+# Setup: repo secret OUTREACH_CRON_SECRET must equal the CRON_SECRET env var
+# on the Vercel project.
+
+on:
+  schedule:
+    # 13:35 and 15:50 UTC — a few minutes after each Vercel cron, so Vercel
+    # wins when it works and this only covers the misses.
+    - cron: '35 13 * * *'
+    - cron: '50 15 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger outreach dispatch
+        env:
+          SECRET: ${{ secrets.OUTREACH_CRON_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then
+            echo "OUTREACH_CRON_SECRET not set — skipping (configure the repo secret)."
+            exit 0
+          fi
+          RESPONSE=$(curl -sS --max-time 120 \
+            -H "Authorization: Bearer $SECRET" \
+            "https://hatchloop.dev/api/cron/outreach-dispatch")
+          echo "$RESPONSE"
+          echo "$RESPONSE" | grep -q '"ok":true' || {
+            echo "Dispatcher did not report ok:true"; exit 1;
+          }
