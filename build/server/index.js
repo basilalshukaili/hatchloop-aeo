@@ -15,6 +15,7 @@ __export(shopify_real_server_exports, {
   authenticate: () => authenticate,
   default: () => shopify,
   login: () => login,
+  prisma: () => prisma,
   registerWebhooks: () => registerWebhooks,
   unauthenticated: () => unauthenticated
 });
@@ -6029,7 +6030,7 @@ function buttonFrom({
   onAction,
   plain,
   destructive,
-  ...action11
+  ...action12
 }, overrides, key) {
   let plainVariant = plain ? "plain" : void 0, destructiveVariant = destructive ? "primary" : void 0, tone = !overrides?.tone && destructive ? "critical" : overrides?.tone;
   return /* @__PURE__ */ React31.createElement(Button, Object.assign({
@@ -6037,7 +6038,7 @@ function buttonFrom({
     onClick: onAction,
     tone,
     variant: plainVariant || destructiveVariant
-  }, action11, overrides), content);
+  }, action12, overrides), content);
 }
 
 // node_modules/@shopify/polaris/build/esm/components/Card/Card.js
@@ -7558,7 +7559,7 @@ function Labelled({
   id,
   label,
   error,
-  action: action11,
+  action: action12,
   helpText,
   children,
   labelHidden,
@@ -7567,9 +7568,9 @@ function Labelled({
   readOnly,
   ...rest
 }) {
-  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action11 ? /* @__PURE__ */ React52.createElement("div", {
+  let className = classNames(labelHidden && styles18.hidden, disabled && styles18.disabled, readOnly && styles18.readOnly), actionMarkup = action12 ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.Action
-  }, buttonFrom(action11, {
+  }, buttonFrom(action12, {
     variant: "plain"
   })) : null, helpTextMarkup = helpText ? /* @__PURE__ */ React52.createElement("div", {
     className: styles18.HelpText,
@@ -8654,12 +8655,12 @@ function ActionsMeasurer({
   useEffect13(() => {
     handleMeasurement();
   }, [handleMeasurement, actions, groups]);
-  let actionsMarkup = actions.map((action11) => {
+  let actionsMarkup = actions.map((action12) => {
     let {
       content,
       onAction,
       ...rest
-    } = action11;
+    } = action12;
     return /* @__PURE__ */ React66.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8729,12 +8730,12 @@ function Actions({
       hasMeasured: containerWidth !== 1 / 0
     });
   }, [containerWidth, disclosureWidth, actions, groups, actionsWidths, setState]);
-  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action11) => {
+  let actionsOrDefault = useMemo6(() => actions ?? [], [actions]), groupsOrDefault = useMemo6(() => groups ?? [], [groups]), actionsMarkup = actionsOrDefault.filter((_, index) => !!visibleActions.includes(index)).map((action12) => {
     let {
       content,
       onAction,
       ...rest
-    } = action11;
+    } = action12;
     return /* @__PURE__ */ React67.createElement(SecondaryAction, Object.assign({
       key: content,
       onClick: onAction
@@ -8742,18 +8743,18 @@ function Actions({
   }), filteredGroups = (hiddenGroups.length > 0 || hiddenActions.length > 0 ? [...groupsOrDefault, defaultRollupGroup] : [...groupsOrDefault]).filter((group, index) => {
     let hasNoGroupsProp = groupsOrDefault.length === 0, isVisibleGroup = visibleGroups.includes(index), isDefaultGroup = group === defaultRollupGroup;
     return hasNoGroupsProp ? hiddenActions.length > 0 : isDefaultGroup ? !0 : isVisibleGroup;
-  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action11) => action11 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
+  }), hiddenActionObjects = hiddenActions.map((index) => actionsOrDefault[index]).filter((action12) => action12 != null), hiddenGroupObjects = hiddenGroups.map((index) => groupsOrDefault[index]).filter((group) => group != null), groupsMarkup = filteredGroups.map((group) => {
     let {
       title,
       actions: groupActions,
       ...rest
-    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action11) => (isMenuGroup(action11) ? sections.push({
-      title: action11.title,
-      items: action11.actions.map((sectionAction) => ({
+    } = group, isDefaultGroup = group === defaultRollupGroup, allHiddenItems = [...hiddenActionObjects, ...hiddenGroupObjects], [finalRolledUpActions, finalRolledUpSectionGroups] = allHiddenItems.reduce(([actions2, sections], action12) => (isMenuGroup(action12) ? sections.push({
+      title: action12.title,
+      items: action12.actions.map((sectionAction) => ({
         ...sectionAction,
-        disabled: action11.disabled || sectionAction.disabled
+        disabled: action12.disabled || sectionAction.disabled
       }))
-    }) : actions2.push(action11), [actions2, sections]), [[], []]);
+    }) : actions2.push(action12), [actions2, sections]), [[], []]);
     return isDefaultGroup ? /* @__PURE__ */ React67.createElement(MenuGroup, Object.assign({
       key: title,
       title,
@@ -8845,9 +8846,9 @@ function convertGroupToSection({
 }) {
   return {
     title,
-    items: actions.map((action11) => ({
-      ...action11,
-      disabled: disabled || action11.disabled
+    items: actions.map((action12) => ({
+      ...action12,
+      disabled: disabled || action12.disabled
     }))
   };
 }
@@ -9038,7 +9039,7 @@ function BannerLayout({
   icon,
   hideIcon,
   onDismiss,
-  action: action11,
+  action: action12,
   secondaryAction,
   title,
   children
@@ -9056,9 +9057,9 @@ function BannerLayout({
     }, /* @__PURE__ */ React71.createElement(Icon, {
       source: icon ?? bannerAttributes[bannerTone].icon
     })),
-    actionButtons: action11 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action11 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
-      onClick: action11.onAction
-    }, action11), action11.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+    actionButtons: action12 || secondaryAction ? /* @__PURE__ */ React71.createElement(ButtonGroup, null, action12 && /* @__PURE__ */ React71.createElement(Button, Object.assign({
+      onClick: action12.onAction
+    }, action12), action12.content), secondaryAction && /* @__PURE__ */ React71.createElement(Button, Object.assign({
       onClick: secondaryAction.onAction
     }, secondaryAction), secondaryAction.content)) : null,
     dismissButton: onDismiss ? /* @__PURE__ */ React71.createElement(Button, {
@@ -10230,7 +10231,7 @@ function EmptyState({
   largeImage,
   imageContained,
   fullWidth = !1,
-  action: action11,
+  action: action12,
   secondaryAction,
   footerContent
 }) {
@@ -10266,7 +10267,7 @@ function EmptyState({
     as: "span",
     alignment: "center",
     variant: "bodySm"
-  }, footerContent)) : null, primaryActionMarkup = action11 ? buttonFrom(action11, {
+  }, footerContent)) : null, primaryActionMarkup = action12 ? buttonFrom(action12, {
     variant: "primary",
     size: "medium"
   }) : null, headingMarkup = heading ? /* @__PURE__ */ React81.createElement(Box, {
@@ -10682,18 +10683,18 @@ function PrimaryActionMarkup({
     printHidden: !0
   }, actionMarkup));
 }
-function shouldShowIconOnly(isMobile, action11) {
+function shouldShowIconOnly(isMobile, action12) {
   let {
     content,
     accessibilityLabel
-  } = action11, {
+  } = action12, {
     icon
-  } = action11;
+  } = action12;
   return icon == null ? {
-    ...action11,
+    ...action12,
     icon: void 0
   } : (isMobile && (accessibilityLabel = accessibilityLabel || content, content = void 0), {
-    ...action11,
+    ...action12,
     content,
     accessibilityLabel,
     icon
@@ -11472,13 +11473,28 @@ async function requestBilling(request, planId) {
 async function checkBilling(request) {
   if (IS_MOCK)
     return { tier: "free" };
+  let shop = null;
   try {
-    let { authenticate: authenticate2, BILLING_PLANS: BILLING_PLANS2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports)), { billing } = await authenticate2.admin(request), { appSubscriptions } = await billing.check({
+    let { authenticate: authenticate2, BILLING_PLANS: BILLING_PLANS2, prisma: prisma2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports)), auth = await authenticate2.admin(request);
+    shop = auth.session.shop;
+    let { appSubscriptions } = await auth.billing.check({
       plans: Object.values(BILLING_PLANS2),
       isTest: !1
-    }), active = appSubscriptions.find((s) => s.status === "ACTIVE");
-    return active ? active.name === BILLING_PLANS2.pro ? { tier: "pro" } : active.name === BILLING_PLANS2.starter ? { tier: "starter" } : { tier: "free" } : { tier: "free" };
+    }), active = appSubscriptions.find((s) => s.status === "ACTIVE"), tier = "free";
+    return active?.name === BILLING_PLANS2.pro ? tier = "pro" : active?.name === BILLING_PLANS2.starter && (tier = "starter"), prisma2.shopPlan.upsert({
+      where: { shop },
+      update: { tier },
+      create: { shop, tier }
+    }).catch(() => {
+    }), { tier };
   } catch {
+    if (shop)
+      try {
+        let { prisma: prisma2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports)), record = await prisma2.shopPlan.findUnique({ where: { shop } });
+        if (record)
+          return { tier: record.tier };
+      } catch {
+      }
     return { tier: "free" };
   }
 }
@@ -11514,9 +11530,9 @@ function App() {
   ] });
 }
 
-// app/routes/webhooks.customers-data-request.jsx
-var webhooks_customers_data_request_exports = {};
-__export(webhooks_customers_data_request_exports, {
+// app/routes/webhooks.app-subscriptions-update.jsx
+var webhooks_app_subscriptions_update_exports = {};
+__export(webhooks_app_subscriptions_update_exports, {
   action: () => action
 });
 import { json as json2 } from "@remix-run/node";
@@ -11539,22 +11555,38 @@ async function verifyWebhookRequest(request) {
   return { valid: !0, body };
 }
 
-// app/routes/webhooks.customers-data-request.jsx
+// app/routes/webhooks.app-subscriptions-update.jsx
+var PLAN_NAME_TO_TIER = {
+  "Starter Plan": "starter",
+  "Pro Plan": "pro"
+};
 async function action({ request }) {
   let { valid, body } = await verifyWebhookRequest(request);
   if (!valid)
     return json2({ ok: !1, error: "invalid hmac" }, 401);
-  if (request.headers.get("X-Shopify-Topic") !== "customers/data_request")
+  if (request.headers.get("X-Shopify-Topic") !== "app_subscriptions/update")
     return json2({ ok: !1, error: "wrong topic" }, 400);
-  if (!body)
-    return json2({ ok: !1, error: "invalid body" }, 400);
-  let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
-  return console.log(`[webhook] customers/data_request \u2014 shop: ${shop}, customer: ${customer}`), json2({ ok: !0 });
+  let shop = request.headers.get("X-Shopify-Shop-Domain");
+  if (!shop || !body?.app_subscription)
+    return json2({ ok: !0 });
+  let sub = body.app_subscription, status = sub.status, planName = sub.name, tier = "free";
+  status === "ACTIVE" && PLAN_NAME_TO_TIER[planName] && (tier = PLAN_NAME_TO_TIER[planName]);
+  try {
+    let { prisma: prisma2 } = await Promise.resolve().then(() => (init_shopify_real_server(), shopify_real_server_exports));
+    await prisma2.shopPlan.upsert({
+      where: { shop },
+      update: { tier },
+      create: { shop, tier }
+    }), console.log(`[billing-webhook] ${shop} \u2192 ${tier} (status: ${status})`);
+  } catch (e) {
+    console.error("[billing-webhook] DB write failed:", e.message);
+  }
+  return json2({ ok: !0 });
 }
 
-// app/routes/webhooks.customers-redact.jsx
-var webhooks_customers_redact_exports = {};
-__export(webhooks_customers_redact_exports, {
+// app/routes/webhooks.customers-data-request.jsx
+var webhooks_customers_data_request_exports = {};
+__export(webhooks_customers_data_request_exports, {
   action: () => action2
 });
 import { json as json3 } from "@remix-run/node";
@@ -11562,17 +11594,17 @@ async function action2({ request }) {
   let { valid, body } = await verifyWebhookRequest(request);
   if (!valid)
     return json3({ ok: !1, error: "invalid hmac" }, 401);
-  if (request.headers.get("X-Shopify-Topic") !== "customers/redact")
+  if (request.headers.get("X-Shopify-Topic") !== "customers/data_request")
     return json3({ ok: !1, error: "wrong topic" }, 400);
   if (!body)
     return json3({ ok: !1, error: "invalid body" }, 400);
   let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
-  return console.log(`[webhook] customers/redact \u2014 shop: ${shop}, customer: ${customer}`), json3({ ok: !0 });
+  return console.log(`[webhook] customers/data_request \u2014 shop: ${shop}, customer: ${customer}`), json3({ ok: !0 });
 }
 
-// app/routes/webhooks.app-uninstalled.jsx
-var webhooks_app_uninstalled_exports = {};
-__export(webhooks_app_uninstalled_exports, {
+// app/routes/webhooks.customers-redact.jsx
+var webhooks_customers_redact_exports = {};
+__export(webhooks_customers_redact_exports, {
   action: () => action3
 });
 import { json as json4 } from "@remix-run/node";
@@ -11580,54 +11612,72 @@ async function action3({ request }) {
   let { valid, body } = await verifyWebhookRequest(request);
   if (!valid)
     return json4({ ok: !1, error: "invalid hmac" }, 401);
-  if (request.headers.get("X-Shopify-Topic") !== "app/uninstalled")
+  if (request.headers.get("X-Shopify-Topic") !== "customers/redact")
     return json4({ ok: !1, error: "wrong topic" }, 400);
   if (!body)
     return json4({ ok: !1, error: "invalid body" }, 400);
+  let shop = body.shop_domain, customer = body.customer?.email ?? "unknown";
+  return console.log(`[webhook] customers/redact \u2014 shop: ${shop}, customer: ${customer}`), json4({ ok: !0 });
+}
+
+// app/routes/webhooks.app-uninstalled.jsx
+var webhooks_app_uninstalled_exports = {};
+__export(webhooks_app_uninstalled_exports, {
+  action: () => action4
+});
+import { json as json5 } from "@remix-run/node";
+async function action4({ request }) {
+  let { valid, body } = await verifyWebhookRequest(request);
+  if (!valid)
+    return json5({ ok: !1, error: "invalid hmac" }, 401);
+  if (request.headers.get("X-Shopify-Topic") !== "app/uninstalled")
+    return json5({ ok: !1, error: "wrong topic" }, 400);
+  if (!body)
+    return json5({ ok: !1, error: "invalid body" }, 400);
   let shop = body.domain || body.myshopify_domain;
-  return console.log(`[webhook] app/uninstalled for shop: ${shop}`), json4({ ok: !0 });
+  return console.log(`[webhook] app/uninstalled for shop: ${shop}`), json5({ ok: !0 });
 }
 
 // app/routes/webhooks.products-update.jsx
 var webhooks_products_update_exports = {};
 __export(webhooks_products_update_exports, {
-  action: () => action4
+  action: () => action5
 });
-import { json as json5 } from "@remix-run/node";
-async function action4({ request }) {
+import { json as json6 } from "@remix-run/node";
+async function action5({ request }) {
   let { valid } = await verifyWebhookRequest(request);
   if (!valid)
-    return json5({ ok: !1, error: "invalid hmac" }, 401);
+    return json6({ ok: !1, error: "invalid hmac" }, 401);
   let topic = request.headers.get("X-Shopify-Topic"), shop = request.headers.get("X-Shopify-Shop-Domain");
-  return ["products/create", "products/update"].includes(topic) ? (console.log(`[webhook] ${topic} for shop: ${shop} \u2014 invalidating scan cache`), json5({ ok: !0 })) : json5({ ok: !1, error: "wrong topic" }, 400);
+  return ["products/create", "products/update"].includes(topic) ? (console.log(`[webhook] ${topic} for shop: ${shop} \u2014 invalidating scan cache`), json6({ ok: !0 })) : json6({ ok: !1, error: "wrong topic" }, 400);
 }
 
 // app/routes/webhooks.shop-redact.jsx
 var webhooks_shop_redact_exports = {};
 __export(webhooks_shop_redact_exports, {
-  action: () => action5
+  action: () => action6
 });
-import { json as json6 } from "@remix-run/node";
-async function action5({ request }) {
+import { json as json7 } from "@remix-run/node";
+async function action6({ request }) {
   let { valid, body } = await verifyWebhookRequest(request);
   if (!valid)
-    return json6({ ok: !1, error: "invalid hmac" }, 401);
+    return json7({ ok: !1, error: "invalid hmac" }, 401);
   if (request.headers.get("X-Shopify-Topic") !== "shop/redact")
-    return json6({ ok: !1, error: "wrong topic" }, 400);
+    return json7({ ok: !1, error: "wrong topic" }, 400);
   if (!body)
-    return json6({ ok: !1, error: "invalid body" }, 400);
+    return json7({ ok: !1, error: "invalid body" }, 400);
   let shop = body.shop_domain;
-  return console.log(`[webhook] shop/redact \u2014 shop: ${shop}`), json6({ ok: !0 });
+  return console.log(`[webhook] shop/redact \u2014 shop: ${shop}`), json7({ ok: !0 });
 }
 
 // app/routes/app.descriptions.jsx
 var app_descriptions_exports = {};
 __export(app_descriptions_exports, {
-  action: () => action6,
+  action: () => action7,
   default: () => DescriptionsPage,
   loader: () => loader2
 });
-import { json as json7 } from "@remix-run/node";
+import { json as json8 } from "@remix-run/node";
 import { useLoaderData as useLoaderData2, useNavigation, useFetcher } from "@remix-run/react";
 import { useState as useState17 } from "react";
 
@@ -11808,7 +11858,7 @@ async function loader2({ request }) {
       fetchError = e.message;
     }
   let mode2 = new URL(request.url).searchParams.get("mode") === "all" ? "all" : "thin", descLen = (p) => (p.descriptionHtml || "").replace(/<[^>]*>/g, "").trim().length, thinProducts = products.filter((p) => descLen(p) < THIN_THRESHOLD), pool = mode2 === "all" ? [...products].sort((a, b) => descLen(a) - descLen(b)) : thinProducts, isFree = tier === "free", visible = isFree ? pool.slice(0, FREE_TIER_LIMIT) : pool, lockedCount = isFree ? Math.max(0, pool.length - FREE_TIER_LIMIT) : 0;
-  return json7({
+  return json8({
     shop,
     tier,
     isMock: IS_MOCK,
@@ -11833,7 +11883,7 @@ function _genRateLimitBulk(shop, count) {
     recent.push(now);
   return _genLog.set(shop, recent), null;
 }
-async function action6({ request }) {
+async function action7({ request }) {
   let shop, admin = null;
   if (IS_MOCK)
     shop = getShopFromRequest(request);
@@ -11845,7 +11895,7 @@ async function action6({ request }) {
   if (intent === "generate") {
     let limitMsg = _genRateLimit(shop);
     if (limitMsg)
-      return json7({ ok: !1, intent: "generate", productId, error: limitMsg }, { status: 429 });
+      return json8({ ok: !1, intent: "generate", productId, error: limitMsg }, { status: 429 });
     try {
       let description = await generateDescription({
         title: productTitle,
@@ -11854,17 +11904,17 @@ async function action6({ request }) {
         tags,
         existingDescription
       });
-      return json7({ ok: !0, intent: "generate", productId, description });
+      return json8({ ok: !0, intent: "generate", productId, description });
     } catch (e) {
-      return json7({ ok: !1, intent: "generate", productId, error: e.message }, { status: 500 });
+      return json8({ ok: !1, intent: "generate", productId, error: e.message }, { status: 500 });
     }
   }
   if (intent === "write") {
     let description = formData.get("description");
     if (!description)
-      return json7({ ok: !1, intent: "write", productId, error: "No description provided" }, { status: 400 });
+      return json8({ ok: !1, intent: "write", productId, error: "No description provided" }, { status: 400 });
     if (IS_MOCK)
-      return json7({ ok: !0, intent: "write", productId });
+      return json8({ ok: !0, intent: "write", productId });
     try {
       let userErrors = (await (await admin.graphql(PRODUCT_UPDATE_MUTATION, {
         variables: {
@@ -11876,9 +11926,9 @@ async function action6({ request }) {
       })).json()).data?.productUpdate?.userErrors ?? [];
       if (userErrors.length)
         throw new Error(userErrors.map((e) => e.message).join("; "));
-      return json7({ ok: !0, intent: "write", productId });
+      return json8({ ok: !0, intent: "write", productId });
     } catch (e) {
-      return json7({ ok: !1, intent: "write", productId, error: e.message }, { status: 500 });
+      return json8({ ok: !1, intent: "write", productId, error: e.message }, { status: 500 });
     }
   }
   if (intent === "bulk_fix") {
@@ -11889,14 +11939,14 @@ async function action6({ request }) {
       try {
         thinPool = ((await (await admin.graphql(PRODUCTS_QUERY, { variables: { first: MAX_PRODUCTS_FETCHED } })).json()).data?.products?.edges ?? []).map((e) => e.node).filter((p) => descLen(p) < THIN_THRESHOLD);
       } catch (e) {
-        return json7({ ok: !1, intent: "bulk_fix", error: `Could not fetch products: ${e.message}` }, { status: 500 });
+        return json8({ ok: !1, intent: "bulk_fix", error: `Could not fetch products: ${e.message}` }, { status: 500 });
       }
     let BATCH_SIZE = tier === "free" ? 3 : 10, batch = thinPool.slice(0, BATCH_SIZE);
     if (batch.length === 0)
-      return json7({ ok: !0, intent: "bulk_fix", results: [], done: 0, total: 0, remaining: 0 });
+      return json8({ ok: !0, intent: "bulk_fix", results: [], done: 0, total: 0, remaining: 0 });
     let limitMsg = _genRateLimitBulk(shop, batch.length);
     if (limitMsg)
-      return json7({ ok: !1, intent: "bulk_fix", error: limitMsg }, { status: 429 });
+      return json8({ ok: !1, intent: "bulk_fix", error: limitMsg }, { status: 429 });
     let results = [];
     for (let product of batch)
       try {
@@ -11912,19 +11962,19 @@ async function action6({ request }) {
         results.push({ productId: product.id, title: product.title, ok: !1, error: e.message });
       }
     let done = results.filter((r) => r.ok).length, remaining = Math.max(0, thinPool.length - batch.length);
-    return json7({ ok: !0, intent: "bulk_fix", results, done, total: batch.length, remaining });
+    return json8({ ok: !0, intent: "bulk_fix", results, done, total: batch.length, remaining });
   }
   if (intent === "bulk_publish") {
     let approved;
     try {
       approved = JSON.parse(formData.get("approved") || "[]");
     } catch {
-      return json7({ ok: !1, intent: "bulk_publish", error: "Could not read the approved list." }, { status: 400 });
+      return json8({ ok: !1, intent: "bulk_publish", error: "Could not read the approved list." }, { status: 400 });
     }
     if (!Array.isArray(approved) || approved.length === 0)
-      return json7({ ok: !1, intent: "bulk_publish", error: "Nothing approved to publish." }, { status: 400 });
+      return json8({ ok: !1, intent: "bulk_publish", error: "Nothing approved to publish." }, { status: 400 });
     if (approved.length > 25)
-      return json7({ ok: !1, intent: "bulk_publish", error: "Too many at once \u2014 publish in smaller batches." }, { status: 400 });
+      return json8({ ok: !1, intent: "bulk_publish", error: "Too many at once \u2014 publish in smaller batches." }, { status: 400 });
     let written = [];
     for (let item of approved) {
       let pid = item && item.productId, desc = item && item.description;
@@ -11947,14 +11997,14 @@ async function action6({ request }) {
           written.push({ productId: pid, title: item.title, ok: !1, error: e.message });
         }
     }
-    return json7({
+    return json8({
       ok: !0,
       intent: "bulk_publish",
       results: written,
       done: written.filter((w) => w.ok).length
     });
   }
-  return json7({ ok: !1, error: "Unknown intent" }, { status: 400 });
+  return json8({ ok: !1, error: "Unknown intent" }, { status: 400 });
 }
 function stripHtml(html) {
   return (html || "").replace(/<[^>]*>/g, "").trim();
@@ -12181,12 +12231,12 @@ __export(app_citations_exports, {
   default: () => CitationsPage,
   loader: () => loader3
 });
-import { json as json8 } from "@remix-run/node";
+import { json as json9 } from "@remix-run/node";
 import { useLoaderData as useLoaderData3 } from "@remix-run/react";
 import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 async function loader3({ request }) {
   let shop = getShopFromRequest(request), tier = await getTier(shop, request);
-  return tier !== "pro" ? json8({ authorized: !1, tier }) : json8({
+  return tier !== "pro" ? json9({ authorized: !1, tier }) : json9({
     authorized: !0,
     tier,
     prompts: [],
@@ -12249,17 +12299,17 @@ function CitationsPage() {
 // app/routes/app.billing.jsx
 var app_billing_exports = {};
 __export(app_billing_exports, {
-  action: () => action7,
+  action: () => action8,
   default: () => BillingPage,
   loader: () => loader4
 });
-import { json as json9 } from "@remix-run/node";
+import { json as json10 } from "@remix-run/node";
 import { useLoaderData as useLoaderData4, useSearchParams, Form } from "@remix-run/react";
 import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
 async function loader4({ request }) {
-  return json9({ isMock: IS_MOCK });
+  return json10({ isMock: IS_MOCK });
 }
-async function action7({ request }) {
+async function action8({ request }) {
   let planId = (await request.formData()).get("plan");
   return requestBilling(request, planId);
 }
@@ -12354,11 +12404,11 @@ function BillingPage() {
 // app/routes/app.schema.jsx
 var app_schema_exports = {};
 __export(app_schema_exports, {
-  action: () => action8,
+  action: () => action9,
   default: () => SchemaPage,
   loader: () => loader5
 });
-import { json as json10 } from "@remix-run/node";
+import { json as json11 } from "@remix-run/node";
 import { useLoaderData as useLoaderData5, useNavigation as useNavigation2, useActionData, Form as Form2 } from "@remix-run/react";
 import { useCallback as useCallback19, useState as useState18 } from "react";
 
@@ -12667,7 +12717,7 @@ async function loader5({ request }) {
     }
   }
   let shopUrl = catalog.shop.primaryDomainUrl || `https://${shop}`, org = buildOrganizationJsonLd({ shop: catalog.shop }), sample = catalog.products.find((p) => p.priceRangeV2?.minVariantPrice?.amount != null) || catalog.products[0] || null, product = sample ? buildProductJsonLd({ product: sample, shopUrl }) : null, coverage = schemaCoverageSummary({ shop: catalog.shop, products: catalog.products }), installable = themes2.filter((t) => t.role === "UNPUBLISHED"), embedDeepLink = buildThemeEditorEmbedDeepLink({ shop });
-  return json10({
+  return json11({
     isMock: IS_MOCK,
     fetchError,
     orgJson: JSON.stringify(org, null, 2),
@@ -12684,10 +12734,10 @@ async function loader5({ request }) {
     embedBlockName: APP_EMBED_BLOCK_NAME
   });
 }
-async function action8({ request }) {
+async function action9({ request }) {
   let themeId = (await request.formData()).get("themeId");
   if (IS_MOCK)
-    return json10({
+    return json11({
       ok: !0,
       mock: !0,
       themeName: "Dawn copy",
@@ -12705,16 +12755,16 @@ async function action8({ request }) {
     let themes2 = ((await adminGraphqlFn(THEMES_QUERY, {}))?.themes?.nodes || []).filter(Boolean);
     target = themes2.find((t) => t.id === themeId) || null, target || (target = themes2.find((t) => t.role === "UNPUBLISHED") || null);
   } catch (e) {
-    return json10({ ok: !1, error: `Could not list themes: ${e.message}` }, { status: 500 });
+    return json11({ ok: !1, error: `Could not list themes: ${e.message}` }, { status: 500 });
   }
   if (!target)
-    return json10({
+    return json11({
       ok: !1,
       noUnpublished: !0,
       error: "No unpublished theme found. Duplicate your live theme (Online Store \u2192 Themes \u2192 Actions \u2192 Duplicate) and try again \u2014 live-theme writes are intentionally blocked for safety."
     }, { status: 400 });
   if (target.role === "MAIN")
-    return json10({
+    return json11({
       ok: !1,
       error: "Refusing to write to the live (MAIN) theme. Pick an unpublished theme."
     }, { status: 400 });
@@ -12725,10 +12775,10 @@ async function action8({ request }) {
       files: [{ filename: SNIPPET_FILENAME, body: { type: "TEXT", value: snippet } }]
     }))?.themeFilesUpsert?.userErrors || [];
     if (errs.length)
-      return json10({ ok: !1, error: errs.map((e) => e.message).join("; ") }, { status: 400 });
+      return json11({ ok: !1, error: errs.map((e) => e.message).join("; ") }, { status: 400 });
   } catch (e) {
     let msg = String(e.message || ""), needsExemption = /exemption|access denied|not approved|protected customer|unauthorized|scope/i.test(msg);
-    return json10({
+    return json11({
       ok: !1,
       needsExemption,
       error: needsExemption ? "Shopify requires a theme-access exemption to write theme files with the Admin API. Meanwhile, use the copy-paste snippet below, or enable the bundled Theme App Extension block (no exemption needed)." : `Snippet write failed: ${msg}`
@@ -12757,7 +12807,7 @@ async function action8({ request }) {
   } catch (e) {
     headNote = `Snippet written; auto-include skipped: ${e.message}`;
   }
-  return json10({
+  return json11({
     ok: !0,
     themeName: target.name,
     themeRole: target.role,
@@ -12973,11 +13023,11 @@ function SchemaPage() {
 // app/routes/app._index.jsx
 var app_index_exports = {};
 __export(app_index_exports, {
-  action: () => action9,
+  action: () => action10,
   default: () => Dashboard,
   loader: () => loader6
 });
-import { json as json11 } from "@remix-run/node";
+import { json as json12 } from "@remix-run/node";
 import { useLoaderData as useLoaderData6, useNavigation as useNavigation3, Form as Form3 } from "@remix-run/react";
 import { Fragment as Fragment2, jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
 async function loader6({ request }) {
@@ -13001,10 +13051,10 @@ async function loader6({ request }) {
     try {
       deepReport = await runAuthenticatedScan({
         adminGraphqlFn: async (query, variables) => {
-          let json14 = await (await admin.graphql(query, { variables })).json();
-          if (json14.errors)
-            throw new Error(json14.errors.map((e) => e.message).join("; "));
-          return json14.data;
+          let json15 = await (await admin.graphql(query, { variables })).json();
+          if (json15.errors)
+            throw new Error(json15.errors.map((e) => e.message).join("; "));
+          return json15.data;
         },
         // Skip merging public storefront sub-scores when they came from a
         // password/bot wall — score on the authenticated catalog alone instead.
@@ -13017,7 +13067,7 @@ async function loader6({ request }) {
   let activeReport = deepReport || publicReport, scoredFromAuth = !!deepReport, crawlNote = null;
   scoredFromAuth && publicAccess && (publicAccess.blocked || publicAccess.storefrontEmpty) ? crawlNote = { reason: publicAccess.reason } : scoredFromAuth && publicError && (crawlNote = { reason: "unreachable" });
   let allFixes = activeReport ? activeReport.allFixes || [] : [], { visible: fixes, locked: lockedCount } = gateFixes(allFixes, tier);
-  return json11({
+  return json12({
     shop,
     tier,
     isMock: IS_MOCK,
@@ -13032,8 +13082,8 @@ async function loader6({ request }) {
     crawlNote
   });
 }
-async function action9({ request }) {
-  return json11({ ok: !0 });
+async function action10({ request }) {
+  return json12({ ok: !0 });
 }
 var SCORE_COLOR = (s) => s >= 80 ? "success" : s >= 65 ? "info" : s >= 50 ? "warning" : "critical", GRADE_COLOR = { A: "success", B: "info", C: "attention", D: "warning", F: "critical" }, SUB_SCORE_LABELS = {
   discoverability: { label: "Discoverability", desc: "llms.txt, agents.md, agentic sitemap, robots.txt" },
@@ -13170,6 +13220,15 @@ function Dashboard() {
             })
           ] }) }) })
         ] }),
+        /* @__PURE__ */ jsx7(
+          Banner,
+          {
+            tone: "info",
+            title: "Generate AI product descriptions in one click",
+            action: { content: "Open AI Descriptions", url: "/app/descriptions" },
+            children: /* @__PURE__ */ jsx7("p", { children: "Bulk-generate optimized descriptions for all your thin or missing product pages \u2014 works on Free, more products on Starter+." })
+          }
+        ),
         /* @__PURE__ */ jsx7(Card, { children: /* @__PURE__ */ jsxs6(BlockStack, { gap: "400", children: [
           /* @__PURE__ */ jsxs6(InlineStack, { align: "space-between", children: [
             /* @__PURE__ */ jsx7(Text, { as: "h2", variant: "headingMd", children: "Ranked Fix List" }),
@@ -13377,11 +13436,11 @@ async function loader7({ request }) {
 // app/routes/app.llms.jsx
 var app_llms_exports = {};
 __export(app_llms_exports, {
-  action: () => action10,
+  action: () => action11,
   default: () => LlmsPage,
   loader: () => loader8
 });
-import { json as json12 } from "@remix-run/node";
+import { json as json13 } from "@remix-run/node";
 import { useLoaderData as useLoaderData7, useNavigation as useNavigation4, Form as Form4 } from "@remix-run/react";
 import { useCallback as useCallback20, useState as useState19 } from "react";
 import { jsx as jsx8, jsxs as jsxs7 } from "react/jsx-runtime";
@@ -13409,7 +13468,7 @@ async function loader8({ request }) {
       fetchError = e.message, catalog = { shop: { name: shop, primaryDomainUrl: `https://${shop}` }, products: [], collections: [] };
     }
   let llmsTxt = buildLlmsTxt({ ...catalog, maxProducts: LLMS_MAX_PRODUCTS2 }), host = catalog.shop.host || (IS_MOCK ? "northwind-outfitters.example.com" : shop);
-  return json12({
+  return json13({
     isMock: IS_MOCK,
     shop,
     llmsTxt,
@@ -13419,8 +13478,8 @@ async function loader8({ request }) {
     fetchError
   });
 }
-async function action10() {
-  return json12({ ok: !0 });
+async function action11() {
+  return json13({ ok: !0 });
 }
 function LlmsPage() {
   let { isMock, llmsTxt, bytes, counts, proxyUrl, fetchError } = useLoaderData7(), busy = useNavigation4().state !== "idle", [copied, setCopied] = useState19(!1), copy = useCallback20(() => {
@@ -13545,11 +13604,11 @@ __export(app_exports, {
   default: () => AppLayout,
   loader: () => loader11
 });
-import { json as json13 } from "@remix-run/node";
+import { json as json14 } from "@remix-run/node";
 import { Outlet as Outlet2, useLoaderData as useLoaderData8, NavLink } from "@remix-run/react";
 import { jsx as jsx9, jsxs as jsxs8 } from "react/jsx-runtime";
 async function loader11({ request }) {
-  return IS_MOCK || await authenticateAdmin(request), json13({ isMock: IS_MOCK });
+  return IS_MOCK || await authenticateAdmin(request), json14({ isMock: IS_MOCK });
 }
 var navStyle = { display: "flex", gap: "12px", padding: "8px 16px", borderBottom: "1px solid #e1e3e5", fontSize: "14px" }, linkStyle = (isActive) => ({ fontWeight: isActive ? 700 : 400, color: "#202223", textDecoration: "none" });
 function AppLayout() {
@@ -13575,7 +13634,7 @@ function AppLayout() {
 }
 
 // server-assets-manifest:@remix-run/dev/assets-manifest
-var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-SWSGM3MR.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-TEXT622D.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-HHO6BOSQ.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-6CNJSAXU.js", imports: ["/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-CAKZUWEW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-Y534ACU7.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-JSCA32FC.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-QWFOT2YG.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "7cf314fd", hmr: void 0, url: "/build/manifest-7CF314FD.js" };
+var assets_manifest_default = { entry: { module: "/build/entry.client-55N7ZHN2.js", imports: ["/build/_shared/chunk-7E4FU2XQ.js", "/build/_shared/chunk-Q3IECNXJ.js"] }, routes: { root: { id: "root", parentId: void 0, path: "", index: void 0, caseSensitive: void 0, module: "/build/root-SWSGM3MR.js", imports: ["/build/_shared/chunk-T7YRQAM3.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/_index": { id: "routes/_index", parentId: "root", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/_index-BUC4YXZK.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app": { id: "routes/app", parentId: "root", path: "app", index: void 0, caseSensitive: void 0, module: "/build/routes/app-AKSQCDJV.js", imports: ["/build/_shared/chunk-EW36KGCP.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app._index": { id: "routes/app._index", parentId: "routes/app", path: void 0, index: !0, caseSensitive: void 0, module: "/build/routes/app._index-U5S7QL5M.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.billing": { id: "routes/app.billing", parentId: "routes/app", path: "billing", index: void 0, caseSensitive: void 0, module: "/build/routes/app.billing-6CNJSAXU.js", imports: ["/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.citations": { id: "routes/app.citations", parentId: "routes/app", path: "citations", index: void 0, caseSensitive: void 0, module: "/build/routes/app.citations-CAKZUWEW.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.descriptions": { id: "routes/app.descriptions", parentId: "routes/app", path: "descriptions", index: void 0, caseSensitive: void 0, module: "/build/routes/app.descriptions-Y534ACU7.js", imports: ["/build/_shared/chunk-SXJSCQMP.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.llms": { id: "routes/app.llms", parentId: "routes/app", path: "llms", index: void 0, caseSensitive: void 0, module: "/build/routes/app.llms-JSCA32FC.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/app.schema": { id: "routes/app.schema", parentId: "routes/app", path: "schema", index: void 0, caseSensitive: void 0, module: "/build/routes/app.schema-QWFOT2YG.js", imports: ["/build/_shared/chunk-WDVYPPUC.js", "/build/_shared/chunk-J5ZLLIQD.js"], hasAction: !0, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/auth.$": { id: "routes/auth.$", parentId: "root", path: "auth/*", index: void 0, caseSensitive: void 0, module: "/build/routes/auth.$-JID2MVQG.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/llms[.]txt": { id: "routes/llms[.]txt", parentId: "root", path: "llms.txt", index: void 0, caseSensitive: void 0, module: "/build/routes/llms[.]txt-ETWGWZ2R.js", imports: void 0, hasAction: !1, hasLoader: !0, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-subscriptions-update": { id: "routes/webhooks.app-subscriptions-update", parentId: "root", path: "webhooks/app-subscriptions-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-subscriptions-update-HK6MYGRX.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.app-uninstalled": { id: "routes/webhooks.app-uninstalled", parentId: "root", path: "webhooks/app-uninstalled", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.app-uninstalled-G7XRXHQZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-data-request": { id: "routes/webhooks.customers-data-request", parentId: "root", path: "webhooks/customers-data-request", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-data-request-GTRSILUH.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.customers-redact": { id: "routes/webhooks.customers-redact", parentId: "root", path: "webhooks/customers-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.customers-redact-QZN6ETLZ.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.products-update": { id: "routes/webhooks.products-update", parentId: "root", path: "webhooks/products-update", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.products-update-AFRRJ72C.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 }, "routes/webhooks.shop-redact": { id: "routes/webhooks.shop-redact", parentId: "root", path: "webhooks/shop-redact", index: void 0, caseSensitive: void 0, module: "/build/routes/webhooks.shop-redact-6YDXBD2O.js", imports: void 0, hasAction: !0, hasLoader: !1, hasClientAction: !1, hasClientLoader: !1, hasErrorBoundary: !1 } }, version: "4a27258e", hmr: void 0, url: "/build/manifest-4A27258E.js" };
 
 // server-entry-module:@remix-run/dev/server-build
 var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fetcherPersist: !0, v3_relativeSplatPath: !0, v3_throwAbortReason: !0, v3_routeConfig: !1, v3_singleFetch: !1, v3_lazyRouteDiscovery: !1, unstable_optimizeDeps: !1 }, publicPath = "/build/", entry = { module: entry_server_node_exports }, routes = {
@@ -13586,6 +13645,14 @@ var mode = "production", assetsBuildDirectory = "public/build", future = { v3_fe
     index: void 0,
     caseSensitive: void 0,
     module: root_exports
+  },
+  "routes/webhooks.app-subscriptions-update": {
+    id: "routes/webhooks.app-subscriptions-update",
+    parentId: "root",
+    path: "webhooks/app-subscriptions-update",
+    index: void 0,
+    caseSensitive: void 0,
+    module: webhooks_app_subscriptions_update_exports
   },
   "routes/webhooks.customers-data-request": {
     id: "routes/webhooks.customers-data-request",

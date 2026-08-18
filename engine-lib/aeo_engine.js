@@ -460,10 +460,41 @@ async function analyzeStore(rawUrl, deps) {
   const robotsRes = await grab('/robots.txt');
   let robotsAllowsAi = true;
   if (robotsRes && !robotsRes.error && robotsRes.status === 200 && robotsRes.html) {
-    const rb = robotsRes.html.toLowerCase();
-    // crude: a blanket disallow-all targeting AI bots
-    const blocksAi = /user-agent:\s*(gptbot|perplexitybot|google-extended|claudebot|oai-searchbot)[\s\S]*?disallow:\s*\//i.test(robotsRes.html)
-                  || /user-agent:\s*\*\s*[\s\S]*?disallow:\s*\/\s*$/im.test(rb);
+    // Parse robots.txt into user-agent blocks and look for a BLANKET disallow
+    // ("Disallow: /" on its own) for an AI agent or for *.
+    //
+    // The previous regex matched `disallow:\s*\/` anywhere after an AI agent
+    // line, so a perfectly correct `Disallow: /api/` (or /cart, /checkout,
+    // /admin — standard on real stores) was scored as "blocks AI crawlers".
+    // That cost every such site 10 points and told them to fix something that
+    // was not broken. Blocking means the whole site, not a subpath.
+    const AI_AGENTS = ['gptbot', 'perplexitybot', 'google-extended', 'claudebot', 'oai-searchbot', '*'];
+    const blocksAi = (() => {
+      let agents = [];
+      let blocked = false;
+      for (const rawLine of robotsRes.html.split(/\r?\n/)) {
+        const line = rawLine.replace(/#.*$/, '').trim();
+        if (!line) continue;
+        const ua = line.match(/^user-agent:\s*(.+)$/i);
+        if (ua) {
+          // consecutive User-agent lines share the following rules
+          agents.push(ua[1].trim().toLowerCase());
+          continue;
+        }
+        const dis = line.match(/^disallow:\s*(.*)$/i);
+        if (dis) {
+          const path = dis[1].trim();
+          if (path === '/' && agents.some((a) => AI_AGENTS.includes(a))) blocked = true;
+          // any rule line ends the "agents" accumulation for the next group
+          const next = line.match(/^user-agent:/i);
+          if (!next) { /* keep agents until a new group starts */ }
+          continue;
+        }
+        if (/^allow:/i.test(line) || /^crawl-delay:/i.test(line) || /^sitemap:/i.test(line)) continue;
+        agents = [];
+      }
+      return blocked;
+    })();
     robotsAllowsAi = !blocksAi;
   }
 
