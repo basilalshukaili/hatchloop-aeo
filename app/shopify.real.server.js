@@ -62,4 +62,4 @@ const shopify = shopifyApp({
 });
 
 export const { authenticate, unauthenticated, login, registerWebhooks } = shopify;
-export { shopify as default };
+export { shopify as default, prisma };

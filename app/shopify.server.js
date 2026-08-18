@@ -167,19 +167,38 @@ export async function requestBilling(request, planId) {
 export async function checkBilling(request) {
   if (IS_MOCK) return { tier: 'free' };
 
+  let shop = null;
   try {
-    const { authenticate, BILLING_PLANS } = await import('./shopify.real.server.js');
-    const { billing } = await authenticate.admin(request);
-    const { appSubscriptions } = await billing.check({
+    const { authenticate, BILLING_PLANS, prisma } = await import('./shopify.real.server.js');
+    const auth = await authenticate.admin(request);
+    shop = auth.session.shop;
+
+    const { appSubscriptions } = await auth.billing.check({
       plans: Object.values(BILLING_PLANS),
       isTest: process.env.NODE_ENV !== 'production',
     });
     const active = appSubscriptions.find((s) => s.status === 'ACTIVE');
-    if (!active) return { tier: 'free' };
-    if (active.name === BILLING_PLANS.pro) return { tier: 'pro' };
-    if (active.name === BILLING_PLANS.starter) return { tier: 'starter' };
-    return { tier: 'free' };
+    let tier = 'free';
+    if (active?.name === BILLING_PLANS.pro) tier = 'pro';
+    else if (active?.name === BILLING_PLANS.starter) tier = 'starter';
+
+    // Write tier to local cache so cold-start failures don't silently downgrade paid merchants
+    prisma.shopPlan.upsert({
+      where: { shop },
+      update: { tier },
+      create: { shop, tier },
+    }).catch(() => {});
+
+    return { tier };
   } catch {
+    // Billing API unreachable — read local cache before defaulting to free
+    if (shop) {
+      try {
+        const { prisma } = await import('./shopify.real.server.js');
+        const record = await prisma.shopPlan.findUnique({ where: { shop } });
+        if (record) return { tier: record.tier };
+      } catch {}
+    }
     return { tier: 'free' };
   }
 }

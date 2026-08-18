@@ -68,3 +68,12 @@ model PromptResult {
 
   @@index([promptId])
 }
+
+// ── Local billing tier cache — prevents silent free-tier downgrade on cold start ──
+// Written on every successful Shopify Billing API check; read as fallback when the
+// API is unreachable (Render cold start, transient timeout, rate limit).
+model ShopPlan {
+  shop      String   @id
+  tier      String   @default("free")  // "free" | "starter" | "pro"
+  updatedAt DateTime @updatedAt
+}

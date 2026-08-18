@@ -352,6 +352,15 @@ export default function Dashboard() {
           </Layout.Section>
         </Layout>
 
+        {/* ── AI Descriptions shortcut ── */}
+        <Banner
+          tone="info"
+          title="Generate AI product descriptions in one click"
+          action={{ content: 'Open AI Descriptions', url: '/app/descriptions' }}
+        >
+          <p>Bulk-generate optimized descriptions for all your thin or missing product pages — works on Free, more products on Starter+.</p>
+        </Banner>
+
         {/* ── Fix list ── */}
         <Card>
           <BlockStack gap="400">
